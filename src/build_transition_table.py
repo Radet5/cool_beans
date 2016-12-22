@@ -6,9 +6,13 @@ def initializeTree(name):
             {'state':1, 'input':'', 'next':'', 'prev':0, 'results':[name]}]
 
 def selectState(tree, state):
+    """Returns a list of Dicts
+    Returns all entries with state == state"""
     return [entry for entry in tree if entry['state'] == state]
 
 def selectInput(tree, state, input_char):
+    """Returns a list of dicts
+    Returns all entries with state == state AND input == input_char"""
     sel = selectState(tree, state)
     return [entry for entry in sel if entry['input'] == input_char]
 
@@ -100,5 +104,5 @@ with open('../data/customer_list.csv') as csvfile:
 
 
     tree_graph = graph(transition_table)
-    with open("graph.dot", "w") as dot_file:
+    with open("../data/graph.dot", "w") as dot_file:
         dot_file.write(tree_graph)
