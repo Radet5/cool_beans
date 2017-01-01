@@ -24,6 +24,25 @@ def addNewRow(tree, input_char, state, prev, results, nxt):
     tree.append(new_row)
     return new_row
 
+def alterRow(row, input_c='', state='', prev='', results='', nxt=''):
+    print "\nAltering Row from:\n"
+    print tabulate([row], headers="keys",\
+                    tablefmt="grid")
+    if input_c:
+        row['input'] = input_c
+    if state:
+        row['state'] = state
+    if prev:
+        row['prev'] = prev
+    if not results == '':
+        row['results'] = results
+    if nxt:
+        row['next'] = nxt
+    print "to:"
+    print tabulate([row], headers="keys",\
+                    tablefmt="grid")+"\n"
+    return row
+
 #TODO: MAYBE. MIGHT NOT BE REUSABLE: rework addName into a searchTree function
 #       which returns info nessecary to add name in right place
 #TODO: modify these functions to use SQL dtatbase
@@ -57,15 +76,8 @@ def addName(tree, name):
                         else:
                             addNewRow(tree, row['input'], new_state_id, state,\
                                       row['results'][:], row['next'])
-                            print "\nAltering Row from:\n"
-                            print tabulate([row], headers="keys",\
-                                           tablefmt="grid")
-                            row['input'] = row['results'][0][depth]
-                            row['next'] = new_state_id
-                            row['results'] = [name]
-                            print "to:"
-                            print tabulate([row], headers="keys",\
-                                           tablefmt="grid")+"\n"
+                            alterRow(row, row['results'][0][depth], '', '',\
+                            [name], new_state_id)
                             new_state_id += 1
                     else:
                         row['results'].append(name)
@@ -104,9 +116,9 @@ def addName(tree, name):
                         new_row = addNewRow(tree, '', new_state_id, state,\
                                             cur_state[0]['results'][:],\
                                             '')
-                        cur_state[0]['input'] = cur_state[0]['results'][0][depth]
-                        cur_state[0]['next'] = new_state_id
-                        cur_state[0]['results'] = []
+                        alterRow(cur_state[0],\
+                                 cur_state[0]['results'][0][depth],\
+                                 '', '', [], new_state_id)
                         new_state_id += 1
                         #Case for when prev name is subset of current name
                         # Just move on to next state/letter/depth
@@ -130,15 +142,10 @@ def addName(tree, name):
                                                           state,\
                                                           row['results'][:],\
                                                           row['next'])
-                                                print "\nAltering Row from:\n"
-                                                print tabulate([row], headers="keys",\
-                                                            tablefmt="grid")
-                                                row['input'] = row['results'][0][depth]
-                                                row['next'] = new_state_id
-                                                row['results'] = [name]
-                                                print "to:"
-                                                print tabulate([row], headers="keys",\
-                                                            tablefmt="grid")+"\n"
+                                                alterRow(row,\
+                                                         row['results'][0][depth],\
+                                                         '', '',\
+                                                         [name], new_state_id)
                                                 new_state_id += 1
                                         else:
                                             row['results'].append(name)
@@ -155,8 +162,8 @@ def addName(tree, name):
                     # it stays in place
                     else:
                         addNewRow(tree, '', new_state_id, state, [name], '')
-                        cur_state[0]['input'] = input_char
-                        cur_state[0]['next'] = new_state_id
+                        alterRow(cur_state[0], input_c=input_char,\
+                                 nxt=new_state_id)
                         return
             #If there are multiple transitions from current state, but none are
             # for the current input then we need to add a transition for
