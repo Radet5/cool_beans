@@ -144,7 +144,7 @@ def addName(tree, name, cust_id):
                                                           row['results'][:],\
                                                           row['next'])
                                                 alterRow(row,\
-                                                         row['results'][0][depth],\
+                                                         row['results'][0][0][depth],\
                                                          '', '',\
                                                          [(name, cust_id)], new_state_id)
                                                 new_state_id += 1
