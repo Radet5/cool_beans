@@ -1,9 +1,10 @@
 import csv
 from tabulate import tabulate
+import sqlite3
 
-def initializeTree(name):
+def initializeTree(name, cust_id):
     return [{'state':0, 'input':name[0], 'next':1, 'prev':'', 'results':[]},
-            {'state':1, 'input':'', 'next':'', 'prev':0, 'results':[name]}]
+            {'state':1, 'input':'', 'next':'', 'prev':0, 'results':[(name, cust_id)]}]
 
 def selectState(tree, state):
     """Returns a list of Dicts
@@ -46,7 +47,7 @@ def alterRow(row, input_c='', state='', prev='', results='', nxt=''):
 #TODO: MAYBE. MIGHT NOT BE REUSABLE: rework addName into a searchTree function
 #       which returns info nessecary to add name in right place
 #TODO: modify these functions to use SQL dtatbase
-def addName(tree, name):
+def addName(tree, name, cust_id):
     """Returns NULL
         Adds name to tree"""
     print "\nEnroling: "+name+"\n"
@@ -71,16 +72,16 @@ def addName(tree, name):
                                       reverse=True)[0]['state']+1
                 for row in cur_state:
                     if len(row['results']) > 0:
-                        if row['results'][0] == name:
-                            row['results'].append(name)
+                        if row['results'][0][0] == name:
+                            row['results'].append((name, cust_id))
                         else:
                             addNewRow(tree, row['input'], new_state_id, state,\
                                       row['results'][:], row['next'])
-                            alterRow(row, row['results'][0][depth], '', '',\
-                            [name], new_state_id)
+                            alterRow(row, row['results'][0][0][depth], '', '',\
+                            [(name, cust_id)], new_state_id)
                             new_state_id += 1
                     else:
-                        row['results'].append(name)
+                        row['results'].append((name, cust_id))
 
                 return
         #Otherwise gonna have to create transition
@@ -95,13 +96,13 @@ def addName(tree, name):
                 if not cur_state[0]['results']:
                     print "WEIRD\nCreating Rows:"
                     addNewRow(tree, input_char, state,'',[],new_state_id)
-                    addNewRow(tree, '', new_state_id, state, [name], '')
+                    addNewRow(tree, '', new_state_id, state, [(name, cust_id)], '')
                     return
                 #Same last name, so multiple results in one leaf.
                 # TODO: SHOULD eventually RECORD THE CUSTOMER ID's HERE
-                elif cur_state[0]['results'][0] == name:
+                elif cur_state[0]['results'][0][0] == name:
                     print "COllISION!"
-                    cur_state[0]['results'].append(name)
+                    cur_state[0]['results'].append((name, cust_id))
                     return
 
                 #If there's not a transition for current input AND there is no
@@ -112,17 +113,17 @@ def addName(tree, name):
                     print "Need to branch!\nCreating Rows:\n"
                     #Make sure name at current level has more letters in it
                     # if it does, move it down
-                    if len(cur_state[0]['results'][0]) > depth :
+                    if len(cur_state[0]['results'][0][0]) > depth :
                         new_row = addNewRow(tree, '', new_state_id, state,\
                                             cur_state[0]['results'][:],\
                                             '')
                         alterRow(cur_state[0],\
-                                 cur_state[0]['results'][0][depth],\
+                                 cur_state[0]['results'][0][0][depth],\
                                  '', '', [], new_state_id)
                         new_state_id += 1
                         #Case for when prev name is subset of current name
                         # Just move on to next state/letter/depth
-                        if new_row['results'][0][depth] == input_char:
+                        if new_row['results'][0][0][depth] == input_char:
                                 print "SAME LETTER!"
                                 state = cur_state[0]['next']
                                 #unless the current name is out of letters
@@ -134,8 +135,8 @@ def addName(tree, name):
                                                         reverse=True)[0]['state']+1
                                     for row in cur_state:
                                         if len(row['results']) > 0:
-                                            if row['results'][0] == name:
-                                                row['results'].append(name)
+                                            if row['results'][0][0] == name:
+                                                row['results'].append((name, cust_id))
                                             else:
                                                 addNewRow(tree, row['input'],\
                                                           new_state_id,\
@@ -145,10 +146,10 @@ def addName(tree, name):
                                                 alterRow(row,\
                                                          row['results'][0][depth],\
                                                          '', '',\
-                                                         [name], new_state_id)
+                                                         [(name, cust_id)], new_state_id)
                                                 new_state_id += 1
                                         else:
-                                            row['results'].append(name)
+                                            row['results'].append((name, cust_id))
 
                                     return
                         else:
@@ -156,12 +157,12 @@ def addName(tree, name):
                                       cur_state[0]['prev'], [],\
                                       new_state_id)
                             addNewRow(tree, '', new_state_id,\
-                                      state, [name], '')
+                                      state, [(name, cust_id)], '')
                             return 
                     #If name at cur level DOESN'T have any more letters,
                     # it stays in place
                     else:
-                        addNewRow(tree, '', new_state_id, state, [name], '')
+                        addNewRow(tree, '', new_state_id, state, [(name, cust_id)], '')
                         alterRow(cur_state[0], input_c=input_char,\
                                  nxt=new_state_id)
                         return
@@ -172,7 +173,7 @@ def addName(tree, name):
                 print "NOT IN TREE\n"
                 addNewRow(tree, input_char, state, cur_state[0]['prev'], [],\
                              new_state_id)
-                addNewRow(tree, '', new_state_id, state, [name], '')
+                addNewRow(tree, '', new_state_id, state, [(name, cust_id)], '')
                 return
 
 def graph(tree):
@@ -186,9 +187,9 @@ def graph(tree):
         if B:
             f += "\t"+str(A)+" -> "+str(B)+" [label = \""+label+"\"]\n"
             if len(row['results']) > 0:
-                f += "\t"+str(A)+" -> "+row['results'][0]+"\n"
+                f += "\t"+str(A)+" -> "+row['results'][0][0]+"\n"
         else:
-            f += "\t"+str(A)+" -> "+row['results'][0]+"\n"
+            f += "\t"+str(A)+" -> "+row['results'][0][0]+"\n"
     f += "}"
     return f
 
@@ -199,19 +200,32 @@ with open('../data/customer_list.csv') as csvfile:
 #   for row in reader:
 #       names.append(row)
     
+    sqlite_file = '../data/cust_db.sqlite'
+
+    #Connect
+    conn = sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+
 
     print "\n\nEnroling: "+names[0]['last_name'].lower()
-    transition_table = initializeTree(names[0]['last_name'].lower())
+    c.execute('INSERT INTO cust (cust_last_name, cust_first_name) VALUES (?,?)',\
+              (names[0]['last_name'].lower(), names[0]['first_name'].lower()))
+    conn.commit()
+    transition_table = initializeTree(names[0]['last_name'].lower(), c.lastrowid)
     print "\n\n"+tabulate(transition_table, headers="keys",\
                           tablefmt="grid")+"\n\n"
     for row in names[1:]:
         enrollee = row['last_name'].lower()
-        addName(transition_table, enrollee)
+        c.execute('INSERT INTO cust (cust_last_name, cust_first_name) VALUES (?,?)',\
+                  (row['last_name'].lower(), row['first_name'].lower()))
+        addName(transition_table, enrollee, c.lastrowid)
+        conn.commit()
     
     print "\n\n"+tabulate(transition_table, headers="keys",\
                           tablefmt="grid")+"\n\n"
 
 
+    conn.close()
     tree_graph = graph(transition_table)
     with open("../data/graph.dot", "w") as dot_file:
         dot_file.write(tree_graph)
