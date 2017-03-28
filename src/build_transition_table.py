@@ -224,6 +224,15 @@ with open('../data/customer_list.csv') as csvfile:
     print "\n\n"+tabulate(transition_table, headers="keys",\
                           tablefmt="grid")+"\n\n"
 
+    for row in transition_table: 
+        c.execute('INSERT INTO transition (transition_input, transition_state,\
+                   transition_prev, transition_next) VALUES (?,?,?,?)',\
+                  (row['input'], row['state'], row['prev'], row['next']))
+        transition_row_id = c.lastrowid
+        for result in row['results']:
+            c.execute('INSERT INTO result (result_transition_id, result_cust_id)\
+                       VALUES (?,?)', (transition_row_id, result[1]))
+        conn.commit()
 
     conn.close()
     tree_graph = graph(transition_table)
