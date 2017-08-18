@@ -1,7 +1,7 @@
 var nameList = document.querySelector('.nameList');
 var nameField = document.querySelector('.nameField');
 var output = document.querySelector('.test');
- nameField.focus()
+nameField.focus();
 
 function clearList(list) {
     while (list.hasChildNodes()) {
@@ -9,50 +9,137 @@ function clearList(list) {
     }
 };
 
+function createRadioList(div, data, name, ids_key, labels_key) {
+   for (i = 0; i < data.length; i++) {
+       var radio = document.createElement("input");
+       radio.setAttribute("type", "radio");
+       radio.name = name;
+       radio.value = data[i][ids_key];
+       radio.id = data[i][labels_key];
+       div.appendChild(radio);
+       var label = document.createElement("label");
+       label.setAttribute("for",data[i][labels_key]);
+       label.textContent = data[i][labels_key];
+       div.appendChild(label);
+       div.appendChild(document.createElement("br"));
+   }
+
+};
+
 window.addEventListener("load", function() {
     var searchSocket = new WebSocket("ws://192.168.0.6:8080/ws0");
-    var custdataSocket = new WebSocket("ws://192.168.0.6:8080/ws1");
 
     searchSocket.onmessage = function (event) {
-        var data = JSON.parse(event.data);
-        clearList(nameList)
-        clearList(output)
-        for (i = 0; i < data.length; i++) {
-            var li = document.createElement("li");
-            var last = data[i]['cust_last_name'];
-            last = last.charAt(0).toUpperCase() + last.substring(1);
-            var first = data[i]['cust_first_name'];
-            first = first.charAt(0).toUpperCase() + first.substring(1);
-            var text = last + ", " + first;
-            li.appendChild(document.createTextNode(text));
-            li.id = data[i]['cust_id'];
-            nameList.appendChild(li);
+        var json_data = JSON.parse(event.data);
+        if (json_data['type'] == 0) {
+            data = json_data['data'];
+            clearList(nameList);
+            clearList(output);
+            for (i = 0; i < data.length; i++) {
+                var li = document.createElement("li");
+                var last = data[i]['cust_last_name'];
+                last = last.charAt(0).toUpperCase() + last.substring(1);
+                var first = data[i]['cust_first_name'];
+                first = first.charAt(0).toUpperCase() + first.substring(1);
+                var text = last + ", " + first;
+                li.appendChild(document.createTextNode(text));
+                li.id = data[i]['cust_id'];
+                nameList.appendChild(li);
+            }
+            nameList.addEventListener('click', function (e){
+                var myHeading = document.querySelector('h1');
+                var heading = "Safai Bean Club";
+                heading = e.target.innerText;
+                myHeading.textContent = heading;
+
+                json_text = "{\"type\":1, \"data\":" + e.target.id +"}"
+                searchSocket.send(json_text);
+            });
         }
-        nameList.addEventListener('click', function (e){
-            var myHeading = document.querySelector('h1');
-            var heading = "Safai Bean Club"
-            heading = e.target.innerText;
-            myHeading.textContent = heading;
+        else {
+            if (json_data['type'] == 1) {
+                clearList(nameList);
+                clearList(output);
 
-            custdataSocket.send(e.target.id);
-        })
-    };
+                var data = json_data['data']
 
-    custdataSocket.onmessage = function (event) {
-        clearList(nameList)
-        clearList(output)
+                var custDiv = document.createElement("div");
+                custDiv.id = "custData";
+                purchases = data['custData'];
+                if (purchases.length == 0) {
+                    custDiv.appendChild(document.createTextNode("No Purchases"));
+                }
+                else {
+                    html = "";
+                    for (i = 0; i < purchases.length; i++) {
+                        html += purchases[i]['coffee_name'] + "&nbsp &nbsp" + purchases[i]['grind_desc'] + "&nbsp &nbsp" + purchases[i]['purchase_weight'] + "&nbsp &nbsp" + purchases[i]['purchase_date']+ "<br>";
+                    }
+                    custDiv.innerHTML = html;
+                }
+                output.appendChild(custDiv);
 
-        var newDiv = document.createElement("div");
-        newDiv.id = "customerData";
-        newDiv.innerHTML = "test<br><br>did work?";
-        output.appendChild(newDiv);
+                var addButtonDiv = document.createElement("div");
+                addButtonDiv.id = "addPurchase";
+                addButtonDiv.appendChild(document.createTextNode("Add Purchase"));
+                addButtonDiv.addEventListener('click', function (e) {
+                    output.removeChild(addButtonDiv);
+                    var coffees = document.createElement("div");
+                    var h2 = document.createElement("h2");
+                    h2.textContent = "Coffee Type:";
+                    coffees.appendChild(h2);
+                    createRadioList(coffees, data['coffeeData'], 'coffee', 'coffee_id', 'coffee_name');
+                    output.appendChild(coffees);
+            
+                    var grinds = document.createElement("div");
+                    h2 = document.createElement("h2")
+                    h2.textContent = "Grind Type:"
+                    grinds.appendChild(h2);
+                    createRadioList(grinds, data['grindData'], 'grind', 'grind_id', 'grind_desc');
+                    output.appendChild(grinds);
 
+                    var weightData = JSON.parse("[{\"weight_val\":16, \"weight_desc\":\"16oz\"},{\"weight_val\":10, \"weight_desc\":\"10oz\"},{\"weight_val\":8, \"weight_desc\":\"8oz\"}]");
+                    var weights = document.createElement("div");
+                    h2 = document.createElement("h2");
+                    h2.textContent = "Weight";
+                    weights.appendChild(h2);
+                    createRadioList(weights, weightData, 'weight', 'weight_val', 'weight_desc');
+                    output.appendChild(weights);
+
+                    var submit = document.createElement("div");
+                    submit.textContent = "Submit";
+                    submit.addEventListener('click', function (e) {
+                        var sel_coffee = "";
+                        var sel_grind = "";
+                        var sel_weight = "";
+                        if (document.querySelector('input[name="coffee"]:checked') &&  document.querySelector('input[name="grind"]:checked') &&  document.querySelector('input[name="weight"]:checked')) {
+                            submit.textContent = "GOOD";
+                            sel_coffee = document.querySelector('input[name="coffee"]:checked').value;
+                            sel_grind = document.querySelector('input[name="grind"]:checked').value;
+                            sel_weight = document.querySelector('input[name="weight"]:checked').value;
+
+                            json_text = "{\"type\":2, \"data\":{\"cust_id\":"+data['custId']+", \"coffee_id\":"+sel_coffee+", \"grind_id\":"+sel_grind+", \"weight\":"+sel_weight+"}}"
+                            searchSocket.send(json_text);
+                        }
+                        else {
+                            alert("Please select all options <3");
+                        }
+                        
+                    });
+
+                    output.appendChild(submit);
+
+                });
+
+                output.appendChild(addButtonDiv);
+            }
+        }
     };
 
 
     nameField.addEventListener('input', function (e) {
         input_text = nameField.value;
-        searchSocket.send(input_text);
+        json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}"
+        searchSocket.send(json_text);
         e.preventDefault();
     })
 });

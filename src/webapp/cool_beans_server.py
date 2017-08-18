@@ -13,6 +13,10 @@ from autobahn.twisted.resource import WebSocketResource
 
 from search_trans_table import search
 from search_trans_table import dict_factory
+from search_trans_table import getCustData
+from search_trans_table import getCoffeeData
+from search_trans_table import getGrindData
+from search_trans_table import registerPurchase
 
 sqlite_file = 'data/cust_db.sqlite'
 conn = sqlite3.connect(sqlite_file)
@@ -21,28 +25,39 @@ c = conn.cursor()
 
 class NameSearchProtocol(WebSocketServerProtocol):
     def onConnect(self, request):
-        print("CustSearchConn: {}".format(request))
+        print("SocketConn: {}".format(request))
 
     def onMessage(self, payload, isBinary):
-        if len(payload) > 0:
-            cust_list = search(payload, c)
-            data = []
-            for row in cust_list:
-                data.append(row)
-#           print data
-            self.sendMessage(json.dumps(data).encode('utf8'))
-#           print html
-            print(payload)
-        else:
-            self.sendMessage("[]".encode('utf8'))
-
-class CustomerDataRequestProtocol(WebSocketServerProtocol):
-    def onConnect(self, request):
-        print("CustDataConn: {}".format(request))
-
-    def onMessage(self, payload, isBinary):
-        text = "Well... they ARE a customer with id = "  + str(payload)
-        self.sendMessage(text.encode('utf8'))
+        print(payload)
+        decoded = json.loads(payload)
+        if decoded['type'] == 0:
+            s_input = decoded['data']
+            if len(s_input) > 0:
+                cust_list = search(s_input, c)
+                data = []
+                for row in cust_list:
+                    data.append(row)
+                json_data = {"type":0, "data":data}
+            else:
+                json_data = {"type":0, "data":[]}
+#           print json.dumps(json_data)
+        elif decoded['type'] == 1:
+            cust_id = decoded['data']
+            #TODO:TRYCATCH NON INT
+            data = {"custId":cust_id, "custData": getCustData(cust_id, c), "coffeeData":getCoffeeData(c),\
+                    "grindData":getGrindData(c)}
+            print data
+            json_data = {"type":1, "data":data}
+        elif decoded['type'] == 2:
+            data = decoded['data']
+            cust_id = data['cust_id']
+            registerPurchase(cust_id, data['coffee_id'], data['grind_id'], data['weight'], c)
+            conn.commit()
+            data = {"custId":cust_id, "custData": getCustData(cust_id, c), "coffeeData":getCoffeeData(c),\
+                    "grindData":getGrindData(c)}
+            print data
+            json_data = {"type":1, "data":data}
+        self.sendMessage(json.dumps(json_data).encode('utf8'))
 
 if __name__ == "__main__":
 
@@ -53,12 +68,7 @@ if __name__ == "__main__":
     factory0.protocol = NameSearchProtocol
     resource0 = WebSocketResource(factory0)
 
-    factory1 = WebSocketServerFactory(u"ws://192.168.0.6:8080")
-    factory1.protocol = CustomerDataRequestProtocol
-    resource1 = WebSocketResource(factory1)
-
     root.putChild(u"ws0", resource0)
-    root.putChild(u"ws1", resource1)
 
     site = Site(root)
     reactor.listenTCP(8080, site)

@@ -2,12 +2,27 @@ import csv
 from tabulate import tabulate
 import sqlite3
 
-def dict_factory(cursor, row):
+def dict_factory(db_curs, row):
     d = {}
-    for idx, col in enumerate(cursor.description):
+    for idx, col in enumerate(db_curs.description):
         d[col[0]] = row[idx]
     return d
 
+def getCustData(cust_id, db_curs):
+    db_curs.execute('SELECT * FROM purchase JOIN coffee ON purchase_coffee_id = coffee_id JOIN grind ON purchase_grind_id = grind_id WHERE purchase_cust_id = ?', (str(cust_id),))
+    return db_curs.fetchall()
+
+def getCoffeeData(db_curs):
+    db_curs.execute('SELECT * FROM coffee')
+    return db_curs.fetchall()
+
+def getGrindData(db_curs):
+    db_curs.execute('SELECT * FROM grind')
+    return db_curs.fetchall()
+
+def registerPurchase(cust_id, coffee_id, grind_id, weight, db_curs):
+    db_curs.execute('INSERT INTO purchase (purchase_cust_id, purchase_coffee_id,\
+                     purchase_grind_id, purchase_weight) VALUES (?,?,?,?)',(str(cust_id), str(coffee_id), str(grind_id), str(weight)))
 
 def recurse(trans_id, db_curs):
     db_curs.execute('SELECT *  FROM transition\
