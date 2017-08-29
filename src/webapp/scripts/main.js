@@ -27,11 +27,12 @@ function createRadioList(div, data, name, ids_key, labels_key) {
 };
 
 window.addEventListener("load", function() {
-    var searchSocket = new WebSocket("ws://192.168.50.32:8080/ws0");
+    var searchSocket = new WebSocket("ws://192.168.0.4:8080/ws0");
 
     searchSocket.onmessage = function (event) {
         var json_data = JSON.parse(event.data);
         if (json_data['type'] == 0) {
+            nameField.focus();
             var myHeading = document.querySelector('h1');
             var heading = "Safai Bean Club";
             myHeading.textContent = heading;
@@ -62,6 +63,7 @@ window.addEventListener("load", function() {
             if (json_data['type'] == 1) {
                 clearList(nameList);
                 clearList(output);
+                nameField.focus();
 
                 var data = json_data['data']
 
@@ -72,19 +74,27 @@ window.addEventListener("load", function() {
                     custDiv.appendChild(document.createTextNode("No Purchases"));
                 }
                 else {
-                    html = "";
+                    html = "<table><thead><tr><th>Coffee Name</th><th>Grind</th>";
+                    html += "<th>Weight</th><th>Transaction Date</th></tr></thead>";
+                    html += "<tbody>";
                     for (i = 0; i < purchases.length; i++) {
-                        html += purchases[i]['coffee_name'] + "&nbsp &nbsp" + purchases[i]['grind_desc'] + "&nbsp &nbsp" + purchases[i]['purchase_weight'] + "&nbsp &nbsp" + purchases[i]['purchase_date']+ "<br>";
+                        html += "<tr>";
+                        html += "<td>" + purchases[i]['coffee_name'] + "</td>";
+                        html += "<td>" + purchases[i]['grind_desc'] + "</td>";
+                        html += "<td>" + purchases[i]['purchase_weight'] + "oz</td>";
+                        html += "<td>" + purchases[i]['purchase_date']+ "</td>";
+                        html += "</tr>";
                     }
+                    html += "</tbody></table>";
                     custDiv.innerHTML = html;
                 }
-                output.appendChild(custDiv);
 
                 var addButtonDiv = document.createElement("div");
                 addButtonDiv.id = "addPurchase";
                 addButtonDiv.appendChild(document.createTextNode("Add Purchase"));
                 addButtonDiv.addEventListener('click', function (e) {
-                    output.removeChild(addButtonDiv);
+//                  output.removeChild(addButtonDiv);
+                    clearList(output);
                     var coffees = document.createElement("div");
                     var h2 = document.createElement("h2");
                     h2.textContent = "Coffee Type:";
@@ -99,7 +109,7 @@ window.addEventListener("load", function() {
                     createRadioList(grinds, data['grindData'], 'grind', 'grind_id', 'grind_desc');
                     output.appendChild(grinds);
 
-                    var weightData = JSON.parse("[{\"weight_val\":16, \"weight_desc\":\"16oz\"},{\"weight_val\":10, \"weight_desc\":\"10oz\"},{\"weight_val\":8, \"weight_desc\":\"8oz\"}]");
+                    var weightData = JSON.parse("[{\"weight_val\":16, \"weight_desc\":\"16oz\"},{\"weight_val\":12, \"weight_desc\":\"12oz\"},{\"weight_val\":8, \"weight_desc\":\"8oz\"}]");
                     var weights = document.createElement("div");
                     h2 = document.createElement("h2");
                     h2.textContent = "Weight";
@@ -133,6 +143,7 @@ window.addEventListener("load", function() {
                 });
 
                 output.appendChild(addButtonDiv);
+                output.appendChild(custDiv);
             }
         }
     };

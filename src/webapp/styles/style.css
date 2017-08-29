@@ -15,6 +15,21 @@ p, li {
   letter-spacing: 1px;
 }
 
+table {
+    border: dashed thin;
+}
+
+th {
+    white-space: nowrap;
+    padding: 0.2em;
+}
+
+td {
+    border: dotted thin;
+    text-align: center;
+    white-space: nowrap;
+    padding 0.5rem 2rem;
+}
 
 html {
   background-color: #00539F;

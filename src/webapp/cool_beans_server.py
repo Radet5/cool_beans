@@ -64,7 +64,7 @@ if __name__ == "__main__":
     log.startLogging(sys.stdout)
     root = File(".")
 
-    factory0 = WebSocketServerFactory(u"ws://192.168.0.6:8080")
+    factory0 = WebSocketServerFactory(u"ws://192.168.0.4:8080")
     factory0.protocol = NameSearchProtocol
     resource0 = WebSocketResource(factory0)
 
