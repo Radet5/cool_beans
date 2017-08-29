@@ -27,11 +27,14 @@ function createRadioList(div, data, name, ids_key, labels_key) {
 };
 
 window.addEventListener("load", function() {
-    var searchSocket = new WebSocket("ws://192.168.0.6:8080/ws0");
+    var searchSocket = new WebSocket("ws://192.168.50.32:8080/ws0");
 
     searchSocket.onmessage = function (event) {
         var json_data = JSON.parse(event.data);
         if (json_data['type'] == 0) {
+            var myHeading = document.querySelector('h1');
+            var heading = "Safai Bean Club";
+            myHeading.textContent = heading;
             data = json_data['data'];
             clearList(nameList);
             clearList(output);
@@ -47,8 +50,7 @@ window.addEventListener("load", function() {
                 nameList.appendChild(li);
             }
             nameList.addEventListener('click', function (e){
-                var myHeading = document.querySelector('h1');
-                var heading = "Safai Bean Club";
+                myHeading = document.querySelector('h1');
                 heading = e.target.innerText;
                 myHeading.textContent = heading;
 
