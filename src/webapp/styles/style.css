@@ -5,12 +5,62 @@ html {
 }
 
 
+.button {
+    display: inline-block;
+    border: 3px solid white;
+    background-color: #552200;
+    color: white;
+}
+
+.test {
+    position:relative;
+    top: 0rem;
+    width: 100%;
+    text-align: center;
+}
+
+#search_div {
+    text-align: center;
+}
+
+.nameList {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#coffees {
+    position: relative;
+    top: 0rem;
+    display: inline-block;
+    vertical-align: top;
+    width: 33%;
+    margin: auto;
+}
+
+#grinds {
+    position: relative;
+    top: 0rem;
+    display: inline-block;
+    vertical-align: top;
+    width: 33%;
+    margin: auto;
+}
+
+#weights {
+    position: relative;
+    top: 0;
+    display: inline-block;
+    vertical-align: top;
+    width: 33%;
+    margin: auto;
+}
+
 h1 {
   font-size: 60px;
   text-align: center;
 }
 
-p, li {
+p, li, label {
   font-size: 16px;  
   line-height: 2;
   letter-spacing: 1px;
@@ -18,6 +68,7 @@ p, li {
 
 table {
     border: dashed thin;
+    margin: 1em auto;
 }
 
 th {

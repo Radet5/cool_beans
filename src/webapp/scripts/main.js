@@ -91,26 +91,30 @@ window.addEventListener("load", function() {
 
                 var addButtonDiv = document.createElement("div");
                 addButtonDiv.id = "addPurchase";
-                addButtonDiv.appendChild(document.createTextNode("Add Purchase"));
+                addButtonDiv.className = "button";
+                addButtonDiv.innerHTML = "&nbspAdd Purchase&nbsp";
                 addButtonDiv.addEventListener('click', function (e) {
 //                  output.removeChild(addButtonDiv);
                     clearList(output);
                     var coffees = document.createElement("div");
+                    coffees.id = "coffees";
                     var h2 = document.createElement("h2");
-                    h2.textContent = "Coffee Type:";
+                    h2.textContent = "Coffee Type";
                     coffees.appendChild(h2);
                     createRadioList(coffees, data['coffeeData'], 'coffee', 'coffee_id', 'coffee_name');
                     output.appendChild(coffees);
             
                     var grinds = document.createElement("div");
+                    grinds.id = "grinds";
                     h2 = document.createElement("h2")
-                    h2.textContent = "Grind Type:"
+                    h2.textContent = "Grind Type"
                     grinds.appendChild(h2);
                     createRadioList(grinds, data['grindData'], 'grind', 'grind_id', 'grind_desc');
                     output.appendChild(grinds);
 
                     var weightData = JSON.parse("[{\"weight_val\":16, \"weight_desc\":\"16oz\"},{\"weight_val\":12, \"weight_desc\":\"12oz\"},{\"weight_val\":8, \"weight_desc\":\"8oz\"}]");
                     var weights = document.createElement("div");
+                    weights.id = "weights";
                     h2 = document.createElement("h2");
                     h2.textContent = "Weight";
                     weights.appendChild(h2);
@@ -118,7 +122,9 @@ window.addEventListener("load", function() {
                     output.appendChild(weights);
 
                     var submit = document.createElement("div");
-                    submit.textContent = "Submit";
+                    submit.id = "submit_button";
+                    submit.className = "button";
+                    submit.innerHTML = "&nbspSubmit&nbsp";
                     submit.addEventListener('click', function (e) {
                         var sel_coffee = "";
                         var sel_grind = "";
