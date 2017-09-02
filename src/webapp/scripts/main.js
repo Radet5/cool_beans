@@ -96,6 +96,16 @@ window.addEventListener("load", function() {
                 addButtonDiv.addEventListener('click', function (e) {
 //                  output.removeChild(addButtonDiv);
                     clearList(output);
+
+                    var backButtonDiv = document.createElement("div");
+                    backButtonDiv.id = "back";
+                    backButtonDiv.className = "button";
+                    backButtonDiv.innerHTML = "&nbspBack&nbsp";
+                    backButtonDiv.addEventListener('click', function (e) {
+                        json_text = "{\"type\":1, \"data\":" + data['custId'] +"}"
+                        searchSocket.send(json_text);
+                    });
+
                     var coffees = document.createElement("div");
                     coffees.id = "coffees";
                     var h2 = document.createElement("h2");
@@ -145,10 +155,22 @@ window.addEventListener("load", function() {
                     });
 
                     output.appendChild(submit);
+                    output.appendChild(backButtonDiv);
 
                 });
 
+                var backButtonDiv = document.createElement("div");
+                backButtonDiv.id = "back";
+                backButtonDiv.className = "button";
+                backButtonDiv.innerHTML = "&nbspBack&nbsp";
+                backButtonDiv.addEventListener('click', function (e) {
+                    input_text = nameField.value;
+                    json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}"
+                    searchSocket.send(json_text);
+                    e.preventDefault();
+                });
                 output.appendChild(addButtonDiv);
+                output.appendChild(backButtonDiv);
                 output.appendChild(custDiv);
             }
         }
