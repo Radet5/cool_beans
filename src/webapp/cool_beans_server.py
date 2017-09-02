@@ -17,6 +17,7 @@ from search_trans_table import getCustData
 from search_trans_table import getCoffeeData
 from search_trans_table import getGrindData
 from search_trans_table import registerPurchase
+from search_trans_table import registerCustomer
 
 sqlite_file = 'data/cust_db.sqlite'
 conn = sqlite3.connect(sqlite_file)
@@ -57,6 +58,11 @@ class NameSearchProtocol(WebSocketServerProtocol):
                     "grindData":getGrindData(c)}
             print data
             json_data = {"type":1, "data":data}
+        elif decoded['type'] == 3:
+            data = decoded['data']
+            print registerCustomer("Tester", "Dave", c)
+            json_data = {"type":2, "data":[]}
+            c.execute
         self.sendMessage(json.dumps(json_data).encode('utf8'))
 
 if __name__ == "__main__":

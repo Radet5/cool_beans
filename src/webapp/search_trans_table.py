@@ -20,9 +20,36 @@ def getGrindData(db_curs):
     db_curs.execute('SELECT * FROM grind')
     return db_curs.fetchall()
 
+def getTransitionTable(db_curs):
+    db_curs.execute('SELECT * FROM transition')
+    transition_table = []
+    rows = db_curs.fetchall()
+    if len (rows) == 0: return []
+    for row in rows:
+        transition_table.append({'state': row['transition_state'],\
+                      'input':row['transition_input'],\
+                      'next':row['transition_next'],\
+                      'prev':row['transition_prev'], 'results':[]})
+    db_curs.execute('SELECT result_transition_id, cust_id, cust_last_name\
+                     FROM result JOIN cust\
+                        ON result_cust_id = cust_id')
+    rows = db_curs.fetchall()
+    if len (rows) == 0: return transition_table
+    for row in rows:
+        trans_id = row['result_transition_id']-1
+        cust_id = row['cust_id']
+        name = str(row['cust_last_name'])
+        transition_table[trans_id]['results'].append((name, cust_id))
+    return transition_table
+        
+
 def registerPurchase(cust_id, coffee_id, grind_id, weight, db_curs):
     db_curs.execute('INSERT INTO purchase (purchase_cust_id, purchase_coffee_id,\
                      purchase_grind_id, purchase_weight) VALUES (?,?,?,?)',(str(cust_id), str(coffee_id), str(grind_id), str(weight)))
+
+def registerCustomer(last_name, first_name, db_curs):
+    transition_table = getTransitionTable(db_curs)
+    return tabulate(transition_table, headers="keys",tablefmt="grid")
 
 def recurse(trans_id, db_curs):
     db_curs.execute('SELECT *  FROM transition\

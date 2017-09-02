@@ -1,6 +1,7 @@
 var nameList = document.querySelector('.nameList');
 var nameField = document.querySelector('.nameField');
 var output = document.querySelector('.test');
+var searchDiv = document.getElementById('search_div');
 nameField.focus();
 
 function clearList(list) {
@@ -29,6 +30,17 @@ function createRadioList(div, data, name, ids_key, labels_key) {
 window.addEventListener("load", function() {
     var searchSocket = new WebSocket("ws://192.168.0.4:8080/ws0");
 
+    var registerButtonDiv = document.createElement("div");
+    registerButtonDiv.id = "registerCustomer";
+    registerButtonDiv.className = "button";
+    registerButtonDiv.innerHTML = "&nbspAdd Customer&nbsp";
+    registerButtonDiv.addEventListener('click', function (e) {
+        json_text = "{\"type\":3, \"data\":\"" + "" + "\"}";
+        searchSocket.send(json_text);
+    });
+
+    searchDiv.appendChild(registerButtonDiv);
+    
     searchSocket.onmessage = function (event) {
         var json_data = JSON.parse(event.data);
         if (json_data['type'] == 0) {
@@ -39,6 +51,7 @@ window.addEventListener("load", function() {
             data = json_data['data'];
             clearList(nameList);
             clearList(output);
+
             for (i = 0; i < data.length; i++) {
                 var li = document.createElement("li");
                 var last = data[i]['cust_last_name'];
@@ -102,7 +115,7 @@ window.addEventListener("load", function() {
                     backButtonDiv.className = "button";
                     backButtonDiv.innerHTML = "&nbspBack&nbsp";
                     backButtonDiv.addEventListener('click', function (e) {
-                        json_text = "{\"type\":1, \"data\":" + data['custId'] +"}"
+                        json_text = "{\"type\":1, \"data\":" + data['custId'] +"}";
                         searchSocket.send(json_text);
                     });
 
@@ -165,7 +178,7 @@ window.addEventListener("load", function() {
                 backButtonDiv.innerHTML = "&nbspBack&nbsp";
                 backButtonDiv.addEventListener('click', function (e) {
                     input_text = nameField.value;
-                    json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}"
+                    json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}";
                     searchSocket.send(json_text);
                     e.preventDefault();
                 });
@@ -179,7 +192,7 @@ window.addEventListener("load", function() {
 
     nameField.addEventListener('input', function (e) {
         input_text = nameField.value;
-        json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}"
+        json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}";
         searchSocket.send(json_text);
         e.preventDefault();
     })
