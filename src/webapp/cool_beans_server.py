@@ -60,7 +60,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 3:
             data = decoded['data']
-            print registerCustomer("Tester", "Dave", c)
+            print registerCustomer("ashon", "Dave", c)
             json_data = {"type":2, "data":[]}
             c.execute
         self.sendMessage(json.dumps(json_data).encode('utf8'))

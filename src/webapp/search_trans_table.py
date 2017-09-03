@@ -2,6 +2,8 @@ import csv
 from tabulate import tabulate
 import sqlite3
 
+from build_transition_table import addName
+
 def dict_factory(db_curs, row):
     d = {}
     for idx, col in enumerate(db_curs.description):
@@ -48,7 +50,21 @@ def registerPurchase(cust_id, coffee_id, grind_id, weight, db_curs):
                      purchase_grind_id, purchase_weight) VALUES (?,?,?,?)',(str(cust_id), str(coffee_id), str(grind_id), str(weight)))
 
 def registerCustomer(last_name, first_name, db_curs):
+    #TODO: Convert name to lowercase
+    #TODO: Check if name exists in database
+    #TODO: Add name to db and get cust_id
     transition_table = getTransitionTable(db_curs)
+    #TODO: insert last name and ID into transition table
+    cust_id = 145
+    addName(transition_table, last_name, cust_id)
+    #TODO: get list of rows to modify by ID along with new row
+    #TODO: get list of rows to add
+    #TODO: Figure out modifications/additions to results table
+    #TODO: Backup old SQL transition table
+    #TODO: Backup old SQL results table
+    #TODO: modify SQL transition table
+    #TODO: modify SQL results table
+    #TODO: Check for errors
     return tabulate(transition_table, headers="keys",tablefmt="grid")
 
 def recurse(trans_id, db_curs):
