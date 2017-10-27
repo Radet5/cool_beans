@@ -5,14 +5,12 @@ import sqlite3
 from build_transition_table import initializeTree
 from build_transition_table import addName
 from build_transition_table import graph
+from build_transition_table import insertCustRowIntoDb
+from build_transition_table import insertTransitionTableRowIntoDb
 
 with open('../data/customer_list.csv') as csvfile:
     reader = csv.DictReader(csvfile, delimiter=',', skipinitialspace=True)
     names = sorted(reader, key=lambda n: n['last_name'])
-#   names = []
-#   for row in reader:
-#       names.append(row)
-    
     sqlite_file = '../data/cust_db.sqlite'
 
     #Connect
@@ -21,30 +19,22 @@ with open('../data/customer_list.csv') as csvfile:
 
 
     print "\n\nEnroling: "+names[0]['last_name'].lower()
-    c.execute('INSERT INTO cust (cust_last_name, cust_first_name) VALUES (?,?)',\
-              (names[0]['last_name'].lower(), names[0]['first_name'].lower()))
+    insertCustRowIntoDb(names[0], c)
     conn.commit()
     transition_table = initializeTree(names[0]['last_name'].lower(), c.lastrowid)
     print "\n\n"+tabulate(transition_table, headers="keys",\
                           tablefmt="grid")+"\n\n"
     for row in names[1:]:
         enrollee = row['last_name'].lower()
-        c.execute('INSERT INTO cust (cust_last_name, cust_first_name) VALUES (?,?)',\
-                  (row['last_name'].lower(), row['first_name'].lower()))
-        addName(transition_table, enrollee, c.lastrowid)
+        cust_id = insertCustRowIntoDb(row, c)
         conn.commit()
+        addName(transition_table, enrollee, cust_id)
     
     print "\n\n"+tabulate(transition_table, headers="keys",\
                           tablefmt="grid")+"\n\n"
 
     for row in transition_table: 
-        c.execute('INSERT INTO transition (transition_input, transition_state,\
-                   transition_prev, transition_next) VALUES (?,?,?,?)',\
-                  (row['input'], row['state'], row['prev'], row['next']))
-        transition_row_id = c.lastrowid
-        for result in row['results']:
-            c.execute('INSERT INTO result (result_transition_id, result_cust_id)\
-                       VALUES (?,?)', (transition_row_id, result[1]))
+        insertTransitionTableRowIntoDb(row, c)
         conn.commit()
 
     conn.close()

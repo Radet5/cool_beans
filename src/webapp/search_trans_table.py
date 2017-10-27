@@ -1,8 +1,13 @@
 import csv
 from tabulate import tabulate
 import sqlite3
+import datetime
+from shutil import copyfile
 
 from build_transition_table import addName
+from build_transition_table import initializeTree
+from build_transition_table import insertCustRowIntoDb
+from build_transition_table import insertTransitionTableRowIntoDb
 
 def dict_factory(db_curs, row):
     d = {}
@@ -50,14 +55,50 @@ def registerPurchase(cust_id, coffee_id, grind_id, weight, db_curs):
                      purchase_grind_id, purchase_weight) VALUES (?,?,?,?)',(str(cust_id), str(coffee_id), str(grind_id), str(weight)))
 
 def registerCustomer(last_name, first_name, db_curs):
+    backup_destination = '../../data/cust_db.sqlite.bak_' + datetime.datetime.now().strftime("%Y_%m_%d_%H-%M")
+    copyfile('../../data/cust_db.sqlite', backup_destination)
     low_last_name = last_name.lower()
     low_first_name = first_name.lower()
-    #TODO: Check if name exists in database
-    #TODO: Add name to db and get cust_id
-    transition_table = getTransitionTable(db_curs)
+    print low_last_name
+    db_curs.execute('SELECT * FROM cust WHERE cust_last_name = ?',(low_last_name,))
+    rows = db_curs.fetchall()
+    is_name_unique = True
+    if len(rows) > 0:
+        is_name_unique = False
+        for row in rows:
+            db_first_name = row['cust_first_name']
+            if low_first_name == db_first_name:
+                is_name_unique = False
+                return "Exact Name Already Exists in Database"
+                break
+            else :
+                print "Different first name"
+                is_name_unique = True
+    if is_name_unique:
+        cust_id = insertCustRowIntoDb({'last_name':low_last_name,\
+                                       'first_name':low_first_name}, db_curs)
+
+        #TODO:FIX THIS
+        #This is a hack. just completely rebuilding and reinsrting tansition_table!!
+        db_curs.execute('SELECT cust_first_name, cust_last_name, cust_id\
+                         FROM cust')
+        rows = db_curs.fetchall()
+        customers = sorted(rows, key=lambda n: n['cust_last_name'])
+
+        transition_table = initializeTree(customers[0]['cust_last_name'], customers[0]['cust_id'])
+
+        for row in customers[1:]:
+            addName(transition_table, row['cust_last_name'], row['cust_id'])
+
+        #delete transition table from db
+        db_curs.execute('DELETE FROM transition')
+        db_curs.execute('DELETE FROM result')
+        for row in transition_table:
+            insertTransitionTableRowIntoDb(row, db_curs)
+
+#       transition_table = getTransitionTable(db_curs)
     #TODO: insert last name and ID into transition table
-    cust_id = 145
-    addName(transition_table, last_name, cust_id)
+#       addName(transition_table, low_last_name, cust_id)
     #TODO: get list of rows to modify by ID along with new row
     #TODO: get list of rows to add
     #TODO: Figure out modifications/additions to results table
@@ -66,7 +107,8 @@ def registerCustomer(last_name, first_name, db_curs):
     #TODO: modify SQL transition table
     #TODO: modify SQL results table
     #TODO: Check for errors
-    return tabulate(transition_table, headers="keys",tablefmt="grid")
+
+        return tabulate(transition_table, headers="keys",tablefmt="grid")
 
 def recurse(trans_id, db_curs):
     db_curs.execute('SELECT *  FROM transition\

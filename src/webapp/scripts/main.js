@@ -52,8 +52,29 @@ window.addEventListener("load", function() {
     registerButtonDiv.className = "button";
     registerButtonDiv.innerHTML = "&nbspAdd Customer&nbsp";
     registerButtonDiv.addEventListener('click', function (e) {
-        json_text = "{\"type\":3, \"data\":\"" + "" + "\"}";
-        sendToServer(searchSocket, json_text, output);
+        clearList(output);
+        clearList(nameList);
+        searchDiv.removeChild(registerButtonDiv);
+        var firstNameField = document.createElement("input");
+        firstNameField.type = "text";
+        firstNameField.placeholder = "First Name";
+        var lastNameField = document.createElement("input");
+        lastNameField.type = "text";
+        lastNameField.placeholder = "Last Name";
+        lastNameField.value = nameField.value;
+        searchDiv.removeChild(nameField);
+        searchDiv.removeChild(nameList);
+        searchDiv.appendChild(firstNameField);
+        searchDiv.appendChild(lastNameField);
+
+        //After all said and done, put stuff back
+//      searchDiv.appendChild(nameField);
+//      searchDiv.appendChild(nameList);
+//      searchDiv.removeChild(firstNameField);
+       
+        
+     // json_text = "{\"type\":3, \"data\":\"" + "" + "\"}";
+     // sendToServer(searchSocket, json_text, output);
     });
 
     searchDiv.appendChild(registerButtonDiv);

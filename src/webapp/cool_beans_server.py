@@ -66,9 +66,9 @@ class NameSearchProtocol(WebSocketServerProtocol):
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 3:
             data = decoded['data']
-            print registerCustomer("Ashon", "Dave", c)
+            print registerCustomer("Bell", "Dave", c)
+            conn.commit()
             json_data = {"type":2, "data":[]}
-            c.execute
         elif decoded['type'] == -1:
             json_data = {"type":-1}
 

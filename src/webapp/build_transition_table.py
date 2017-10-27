@@ -46,7 +46,6 @@ def alterRow(row, input_c='', state='', prev='', results='', nxt=''):
 
 #TODO: MAYBE. MIGHT NOT BE REUSABLE: rework addName into a searchTree function
 #       which returns info nessecary to add name in right place
-#TODO: modify these functions to use SQL dtatbase
 #TODO: FIX CURRENTLY ONLY WORKS IF IN ALPHABETICAL ORDER
 def addName(tree, name, cust_id):
     """Returns NULL
@@ -164,8 +163,14 @@ def addName(tree, name, cust_id):
                     # it stays in place
                     else:
                         addNewRow(tree, '', new_state_id, state, [(name, cust_id)], '')
-                        alterRow(cur_state[0], input_c=input_char,\
-                                 nxt=new_state_id)
+                        #Check if there is already a transtion be sure to preserve it
+                        if cur_state[0]['input']:
+                            print "Well shit, Sir Ashon"
+                            addNewRow(tree, input_char, cur_state[0]['state'],\
+                                      cur_state[0]['prev'], [], new_state_id)
+                        else:
+                            alterRow(cur_state[0], input_c=input_char,\
+                                     nxt=new_state_id)
                         return
             #If there are multiple transitions from current state, but none are
             # for the current input then we need to add a transition for
@@ -176,6 +181,20 @@ def addName(tree, name, cust_id):
                              new_state_id)
                 addNewRow(tree, '', new_state_id, state, [(name, cust_id)], '')
                 return
+
+def insertCustRowIntoDb(row, cursor):
+    cursor.execute('INSERT INTO cust (cust_last_name, cust_first_name) VALUES (?,?)',\
+              (row['last_name'].lower(), row['first_name'].lower()))
+    return cursor.lastrowid
+    
+def insertTransitionTableRowIntoDb(row, cursor):
+    cursor.execute('INSERT INTO transition (transition_input, transition_state,\
+               transition_prev, transition_next) VALUES (?,?,?,?)',\
+              (row['input'], row['state'], row['prev'], row['next']))
+    transition_row_id = cursor.lastrowid
+    for result in row['results']:
+        cursor.execute('INSERT INTO result (result_transition_id, result_cust_id)\
+                   VALUES (?,?)', (transition_row_id, result[1]))
 
 def graph(tree):
     """Returns a string which can be used by dot to create a directed graph of
@@ -193,3 +212,4 @@ def graph(tree):
             f += "\t"+str(A)+" -> "+row['results'][0][0]+"\n"
     f += "}"
     return f
+
