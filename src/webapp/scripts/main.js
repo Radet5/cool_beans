@@ -10,6 +10,22 @@ function clearList(list) {
     }
 };
 
+function sendToServer(socket, json_text, console) {
+
+        if (socket.readyState == socket.OPEN) {
+                socket.send(json_text);
+        }
+        else {
+            clearList(console);
+            var msg = document.createElement("h2");
+            var subtext = document.createElement("div");
+            msg.textContent = "Connection Error:";
+            subtext.innerHTML = "<p>Socket is not open</p>";
+            console.appendChild(msg);
+            console.appendChild(subtext);
+        }
+}
+
 function createRadioList(div, data, name, ids_key, labels_key) {
    for (i = 0; i < data.length; i++) {
        var radio = document.createElement("input");
@@ -28,7 +44,8 @@ function createRadioList(div, data, name, ids_key, labels_key) {
 };
 
 window.addEventListener("load", function() {
-    var searchSocket = new WebSocket("ws://192.168.0.4:8080/ws0");
+    var webSocketString = "ws://" + self.location.host + "/ws0";
+    var searchSocket = new WebSocket(webSocketString);
 
     var registerButtonDiv = document.createElement("div");
     registerButtonDiv.id = "registerCustomer";
@@ -36,44 +53,46 @@ window.addEventListener("load", function() {
     registerButtonDiv.innerHTML = "&nbspAdd Customer&nbsp";
     registerButtonDiv.addEventListener('click', function (e) {
         json_text = "{\"type\":3, \"data\":\"" + "" + "\"}";
-        searchSocket.send(json_text);
+        sendToServer(searchSocket, json_text, output);
     });
 
     searchDiv.appendChild(registerButtonDiv);
     
     searchSocket.onmessage = function (event) {
         var json_data = JSON.parse(event.data);
-        if (json_data['type'] == 0) {
-            nameField.focus();
-            var myHeading = document.querySelector('h1');
-            var heading = "Safai Bean Club";
-            myHeading.textContent = heading;
-            data = json_data['data'];
-            clearList(nameList);
-            clearList(output);
-
-            for (i = 0; i < data.length; i++) {
-                var li = document.createElement("li");
-                var last = data[i]['cust_last_name'];
-                last = last.charAt(0).toUpperCase() + last.substring(1);
-                var first = data[i]['cust_first_name'];
-                first = first.charAt(0).toUpperCase() + first.substring(1);
-                var text = last + ", " + first;
-                li.appendChild(document.createTextNode(text));
-                li.id = data[i]['cust_id'];
-                nameList.appendChild(li);
-            }
-            nameList.addEventListener('click', function (e){
-                myHeading = document.querySelector('h1');
-                heading = e.target.innerText;
+        switch (json_data['type']) {
+            case 0:
+                nameField.focus();
+                var myHeading = document.querySelector('h1');
+                var heading = "Safai Bean Club";
                 myHeading.textContent = heading;
+                data = json_data['data'];
+                clearList(nameList);
+                clearList(output);
 
-                json_text = "{\"type\":1, \"data\":" + e.target.id +"}"
-                searchSocket.send(json_text);
-            });
-        }
-        else {
-            if (json_data['type'] == 1) {
+                for (i = 0; i < data.length; i++) {
+                    var li = document.createElement("li");
+                    var last = data[i]['cust_last_name'];
+                    last = last.charAt(0).toUpperCase() + last.substring(1);
+                    var first = data[i]['cust_first_name'];
+                    first = first.charAt(0).toUpperCase() + first.substring(1);
+                    var text = last + ", " + first;
+                    li.appendChild(document.createTextNode(text));
+                    li.id = data[i]['cust_id'];
+                    nameList.appendChild(li);
+                }
+                nameList.addEventListener('click', function (e){
+                    if (e.target.id) {
+                        myHeading = document.querySelector('h1');
+                        heading = e.target.innerText;
+                        myHeading.textContent = heading;
+
+                        json_text = "{\"type\":1, \"data\":" + e.target.id +"}"
+                        sendToServer(searchSocket, json_text, output);
+                    }
+                });
+                break;
+            case 1:
                 clearList(nameList);
                 clearList(output);
                 nameField.focus();
@@ -116,7 +135,7 @@ window.addEventListener("load", function() {
                     backButtonDiv.innerHTML = "&nbspBack&nbsp";
                     backButtonDiv.addEventListener('click', function (e) {
                         json_text = "{\"type\":1, \"data\":" + data['custId'] +"}";
-                        searchSocket.send(json_text);
+                        sendToServer(searchSocket, json_text, output);
                     });
 
                     var coffees = document.createElement("div");
@@ -159,7 +178,7 @@ window.addEventListener("load", function() {
                             sel_weight = document.querySelector('input[name="weight"]:checked').value;
 
                             json_text = "{\"type\":2, \"data\":{\"cust_id\":"+data['custId']+", \"coffee_id\":"+sel_coffee+", \"grind_id\":"+sel_grind+", \"weight\":"+sel_weight+"}}"
-                            searchSocket.send(json_text);
+                            sendToServer(searchSocket, json_text, output);
                         }
                         else {
                             alert("Please select all options <3");
@@ -179,13 +198,13 @@ window.addEventListener("load", function() {
                 backButtonDiv.addEventListener('click', function (e) {
                     input_text = nameField.value;
                     json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}";
-                    searchSocket.send(json_text);
+                    sendToServer(searchSocket, json_text, output);
                     e.preventDefault();
                 });
                 output.appendChild(addButtonDiv);
                 output.appendChild(backButtonDiv);
                 output.appendChild(custDiv);
-            }
+                break;
         }
     };
 
@@ -193,7 +212,7 @@ window.addEventListener("load", function() {
     nameField.addEventListener('input', function (e) {
         input_text = nameField.value;
         json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}";
-        searchSocket.send(json_text);
+        sendToServer(searchSocket, json_text, output);
         e.preventDefault();
     })
 });

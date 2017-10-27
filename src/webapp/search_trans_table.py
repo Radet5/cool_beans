@@ -50,7 +50,8 @@ def registerPurchase(cust_id, coffee_id, grind_id, weight, db_curs):
                      purchase_grind_id, purchase_weight) VALUES (?,?,?,?)',(str(cust_id), str(coffee_id), str(grind_id), str(weight)))
 
 def registerCustomer(last_name, first_name, db_curs):
-    #TODO: Convert name to lowercase
+    low_last_name = last_name.lower()
+    low_first_name = first_name.lower()
     #TODO: Check if name exists in database
     #TODO: Add name to db and get cust_id
     transition_table = getTransitionTable(db_curs)

@@ -1,6 +1,7 @@
 import sys
 import sqlite3
 import json
+import socket
 from twisted.web.static import File
 from twisted.python import log
 from twisted.web.server import Site
@@ -30,7 +31,12 @@ class NameSearchProtocol(WebSocketServerProtocol):
 
     def onMessage(self, payload, isBinary):
         print(payload)
-        decoded = json.loads(payload)
+        try:
+            decoded = json.loads(payload)
+        except ValueError:
+            print("ERROR: Invalid JSON object recieved")
+            decoded = {"type": -1}
+
         if decoded['type'] == 0:
             s_input = decoded['data']
             if len(s_input) > 0:
@@ -60,9 +66,12 @@ class NameSearchProtocol(WebSocketServerProtocol):
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 3:
             data = decoded['data']
-            print registerCustomer("ashon", "Dave", c)
+            print registerCustomer("Ashon", "Dave", c)
             json_data = {"type":2, "data":[]}
             c.execute
+        elif decoded['type'] == -1:
+            json_data = {"type":-1}
+
         self.sendMessage(json.dumps(json_data).encode('utf8'))
 
 if __name__ == "__main__":
@@ -70,7 +79,10 @@ if __name__ == "__main__":
     log.startLogging(sys.stdout)
     root = File(".")
 
-    factory0 = WebSocketServerFactory(u"ws://192.168.0.4:8080")
+    ip = socket.gethostbyname(socket.gethostname())
+        
+    websocket_string = "ws://" + str(ip) + ":8080"
+    factory0 = WebSocketServerFactory(websocket_string)
     factory0.protocol = NameSearchProtocol
     resource0 = WebSocketResource(factory0)
 

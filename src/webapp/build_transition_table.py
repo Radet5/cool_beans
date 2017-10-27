@@ -47,6 +47,7 @@ def alterRow(row, input_c='', state='', prev='', results='', nxt=''):
 #TODO: MAYBE. MIGHT NOT BE REUSABLE: rework addName into a searchTree function
 #       which returns info nessecary to add name in right place
 #TODO: modify these functions to use SQL dtatbase
+#TODO: FIX CURRENTLY ONLY WORKS IF IN ALPHABETICAL ORDER
 def addName(tree, name, cust_id):
     """Returns NULL
         Adds name to tree"""
