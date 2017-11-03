@@ -44,8 +44,17 @@ function createRadioList(div, data, name, ids_key, labels_key) {
 };
 
 window.addEventListener("load", function() {
-    var webSocketString = "ws://" + self.location.host + "/ws0";
+    var ip = self.location.host
+//  var ip = "127.0.0.1"
+    var webSocketString = "ws://" + ip + "/ws0";
     var searchSocket = new WebSocket(webSocketString);
+
+    nameField.addEventListener('input', function (e) {
+        input_text = nameField.value;
+        json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}";
+        sendToServer(searchSocket, json_text, output);
+        e.preventDefault();
+    })
 
     var registerButtonDiv = document.createElement("div");
     registerButtonDiv.id = "registerCustomer";
@@ -56,36 +65,59 @@ window.addEventListener("load", function() {
         clearList(nameList);
         searchDiv.removeChild(registerButtonDiv);
         var firstNameField = document.createElement("input");
+        firstNameField.id = "firstNameField";
+        firstNameField.className = "nameField";
         firstNameField.type = "text";
         firstNameField.placeholder = "First Name";
         var lastNameField = document.createElement("input");
+        lastNameField.id = "lastNameField";
+        lastNameField.className = "nameField";
         lastNameField.type = "text";
         lastNameField.placeholder = "Last Name";
         lastNameField.value = nameField.value;
+        var submitCust = document.createElement("div");
+        submitCust.id = "cust_submit_button";
+        submitCust.className = "button";
+        submitCust.innerHTML = "&nbspSubmit&nbsp";
+        submitCust.addEventListener('click', function (e) {
+            if (firstNameField.value != "" && lastNameField.value != "") {
+                submitCust.textContent = "GOOD";
+                json_text = "{\"type\":3, \"data\":{\"last_name\":\""+lastNameField.value+"\",\"first_name\":\""+firstNameField.value+"\"}}";
+                sendToServer(searchSocket, json_text, output);
+        //After all said and done, put stuff back
+                searchDiv.appendChild(nameField);
+                searchDiv.appendChild(nameList);
+                searchDiv.removeChild(firstNameField);
+                searchDiv.removeChild(lastNameField);
+                searchDiv.removeChild(submitCust);
+                searchDiv.appendChild(registerButtonDiv);
+                nameField.focus();
+            }
+            else {
+                alert("Please enter a first and a last name");
+            }
+        });
+
+       
         searchDiv.removeChild(nameField);
         searchDiv.removeChild(nameList);
         searchDiv.appendChild(firstNameField);
         searchDiv.appendChild(lastNameField);
-
-        //After all said and done, put stuff back
-//      searchDiv.appendChild(nameField);
-//      searchDiv.appendChild(nameList);
-//      searchDiv.removeChild(firstNameField);
-       
+        searchDiv.appendChild(submitCust);
+        lastNameField.focus();
         
-     // json_text = "{\"type\":3, \"data\":\"" + "" + "\"}";
-     // sendToServer(searchSocket, json_text, output);
     });
 
     searchDiv.appendChild(registerButtonDiv);
     
     searchSocket.onmessage = function (event) {
         var json_data = JSON.parse(event.data);
+        var myHeading = document.getElementById('heading');
+        var heading = "Safai Bean Club";
         switch (json_data['type']) {
             case 0:
                 nameField.focus();
-                var myHeading = document.querySelector('h1');
-                var heading = "Safai Bean Club";
+                heading = "Safai Bean Club";
                 myHeading.textContent = heading;
                 data = json_data['data'];
                 clearList(nameList);
@@ -104,11 +136,7 @@ window.addEventListener("load", function() {
                 }
                 nameList.addEventListener('click', function (e){
                     if (e.target.id) {
-                        myHeading = document.querySelector('h1');
-                        heading = e.target.innerText;
-                        myHeading.textContent = heading;
-
-                        json_text = "{\"type\":1, \"data\":" + e.target.id +"}"
+                        json_text = "{\"type\":1, \"data\":" + e.target.id +"}";
                         sendToServer(searchSocket, json_text, output);
                     }
                 });
@@ -119,6 +147,12 @@ window.addEventListener("load", function() {
                 nameField.focus();
 
                 var data = json_data['data']
+
+                
+                var last = data['cust_last_name'].charAt(0).toUpperCase() + data['cust_last_name'].substring(1);
+                var first = data['cust_first_name'].charAt(0).toUpperCase() + data['cust_first_name'].substring(1);
+                heading =  last + ", " + first;
+                myHeading.textContent = heading;
 
                 var custDiv = document.createElement("div");
                 custDiv.id = "custData";
@@ -226,14 +260,21 @@ window.addEventListener("load", function() {
                 output.appendChild(backButtonDiv);
                 output.appendChild(custDiv);
                 break;
+            case -1:
+                if (json_data['data'].length > 0) {
+                    alert(json_data['data'][0]);
+                }
+                else {
+                    alert("Server Error");
+                }
+                break;
+            case -2:
+                alert(json_data['data']);
+                json_text = "{\"type\":1, \"data\":" + json_data['cust_id'] + "}";
+                sendToServer(searchSocket, json_text, output);
+                break;
         }
     };
 
 
-    nameField.addEventListener('input', function (e) {
-        input_text = nameField.value;
-        json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}";
-        sendToServer(searchSocket, json_text, output);
-        e.preventDefault();
-    })
 });

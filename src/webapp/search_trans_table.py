@@ -19,6 +19,10 @@ def getCustData(cust_id, db_curs):
     db_curs.execute('SELECT * FROM purchase JOIN coffee ON purchase_coffee_id = coffee_id JOIN grind ON purchase_grind_id = grind_id WHERE purchase_cust_id = ?', (str(cust_id),))
     return db_curs.fetchall()
 
+def getCustName(cust_id, db_curs):
+    db_curs.execute('SELECT cust_first_name, cust_last_name FROM cust WHERE cust_id = ?',(cust_id,))
+    return db_curs.fetchall()
+
 def getCoffeeData(db_curs):
     db_curs.execute('SELECT * FROM coffee')
     return db_curs.fetchall()
@@ -69,7 +73,7 @@ def registerCustomer(last_name, first_name, db_curs):
             db_first_name = row['cust_first_name']
             if low_first_name == db_first_name:
                 is_name_unique = False
-                return "Exact Name Already Exists in Database"
+                return row['cust_id'] * -1
                 break
             else :
                 print "Different first name"
@@ -108,7 +112,7 @@ def registerCustomer(last_name, first_name, db_curs):
     #TODO: modify SQL results table
     #TODO: Check for errors
 
-        return tabulate(transition_table, headers="keys",tablefmt="grid")
+        return cust_id
 
 def recurse(trans_id, db_curs):
     db_curs.execute('SELECT *  FROM transition\
