@@ -17,7 +17,11 @@ def dict_factory(db_curs, row):
 
 def getCustData(cust_id, db_curs):
     db_curs.execute('SELECT * FROM purchase JOIN coffee ON purchase_coffee_id = coffee_id JOIN grind ON purchase_grind_id = grind_id WHERE purchase_cust_id = ?', (str(cust_id),))
-    return db_curs.fetchall()
+    result_a = db_curs.fetchall()
+    db_curs.execute('SELECT * FROM claim JOIN coffee ON claim_coffee_id = coffee_id JOIN grind ON claim_grind_id = grind_id WHERE claim_cust_id = ?', (str(cust_id),))
+    result_b = db_curs.fetchall()
+    result_a.append(result_b)
+    return result_a
 
 def getCustName(cust_id, db_curs):
     db_curs.execute('SELECT cust_first_name, cust_last_name FROM cust WHERE cust_id = ?',(cust_id,))
@@ -57,6 +61,10 @@ def getTransitionTable(db_curs):
 def registerPurchase(cust_id, coffee_id, grind_id, weight, db_curs):
     db_curs.execute('INSERT INTO purchase (purchase_cust_id, purchase_coffee_id,\
                      purchase_grind_id, purchase_weight) VALUES (?,?,?,?)',(str(cust_id), str(coffee_id), str(grind_id), str(weight)))
+
+def registerClaim(cust_id, coffee_id, grind_id, weight, db_curs):
+    db_curs.execute('INSERT INTO claim (claim_cust_id, claim_coffee_id,\
+                     claim_grind_id, purchase_weight) VALUES (?,?,?,?)',(str(cust_id), str(coffee_id), str(grind_id), str(weight)))
 
 def registerCustomer(last_name, first_name, db_curs):
     backup_destination = '../../data/cust_db.sqlite.bak_' + datetime.datetime.now().strftime("%Y_%m_%d_%H-%M")

@@ -34,6 +34,19 @@ c.execute('CREATE TABLE purchase (purchase_id INTEGER PRIMARY KEY ASC,\
                                   FOREIGN KEY(purchase_grind_id)\
                                     REFERENCES grind(grind_id))')
 
+c.execute('CREATE TABLE claim (claim_id INTEGER PRIMARY KEY ASC,\
+                                  claim_cust_id INTEGER NOT NULL,\
+                                  purchase_date TEXT DEFAULT CURRENT_TIMESTAMP,\
+                                  claim_coffee_id INTEGER NOT NULL,\
+                                  claim_grind_id INTEGER NOT NULL,\
+                                  purchase_weight REAL NOT NULL,\
+                                  FOREIGN KEY(claim_cust_id)\
+                                    REFERENCES cust(cust_id),\
+                                  FOREIGN KEY(claim_coffee_id)\
+                                    REFERENCES coffee(coffee_id),\
+                                  FOREIGN KEY(claim_grind_id)\
+                                    REFERENCES grind(grind_id))')
+
 c.execute('CREATE TABLE transition (transition_id INTEGER PRIMARY KEY ASC,\
                                     transition_input CHARACTER,\
                                     transition_state INTEGER NOT NULL,\

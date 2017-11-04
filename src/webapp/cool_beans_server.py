@@ -19,6 +19,7 @@ from search_trans_table import getCustName
 from search_trans_table import getCoffeeData
 from search_trans_table import getGrindData
 from search_trans_table import registerPurchase
+from search_trans_table import registerClaim
 from search_trans_table import registerCustomer
 
 sqlite_file = 'data/cust_db.sqlite'
@@ -29,6 +30,24 @@ c = conn.cursor()
 class NameSearchProtocol(WebSocketServerProtocol):
     def onConnect(self, request):
         print("SocketConn: {}".format(request))
+
+    def buildCustPageDataJSON(self, cust_id, c):
+        name_info = getCustName(cust_id, c)[0]
+        cust_data = getCustData(cust_id, c)
+        claims = cust_data.pop()
+        claim_count = len(claims)
+        earned_rewards = len(cust_data)/10
+        remaining_rewards = earned_rewards - claim_count
+
+        cust_data.extend(claims)
+        
+        return {"custId":cust_id,\
+                "firstName":name_info['cust_first_name'],\
+                "lastName":name_info['cust_last_name'],\
+                "custData": sorted(cust_data, key=lambda k: k['purchase_date'], reverse=True),\
+                "remainingRewards": remaining_rewards,\
+                "coffeeData":getCoffeeData(c),\
+                "grindData":getGrindData(c)}
 
     def onMessage(self, payload, isBinary):
         print(payload)
@@ -54,25 +73,15 @@ class NameSearchProtocol(WebSocketServerProtocol):
         elif decoded['type'] == 1:
             cust_id = decoded['data']
             #TODO:TRYCATCH NON INT
-            name_info = getCustName(cust_id, c)[0]
-            data = {"custId":cust_id,\
-                    "cust_first_name":name_info['cust_first_name'],\
-                    "cust_last_name":name_info['cust_last_name'],\
-                    "custData": getCustData(cust_id, c), "coffeeData":getCoffeeData(c),\
-                    "grindData":getGrindData(c)}
+            data = self.buildCustPageDataJSON(cust_id, c)
             print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 2:
-            data = decoded['data']
-            cust_id = data['cust_id']
-            registerPurchase(cust_id, data['coffee_id'], data['grind_id'], data['weight'], c)
+            purch_data = decoded['data']
+            cust_id = purch_data['cust_id']
+            registerPurchase(cust_id, purch_data['coffee_id'], purch_data['grind_id'], purch_data['weight'], c)
             conn.commit()
-            name_info = getCustName(cust_id, c)[0]
-            data = {"custId":cust_id,\
-                    "cust_first_name":name_info['cust_first_name'],\
-                    "cust_last_name":name_info['cust_last_name'],\
-                    "custData": getCustData(cust_id, c), "coffeeData":getCoffeeData(c),\
-                    "grindData":getGrindData(c)}
+            data = self.buildCustPageDataJSON(cust_id, c)
             print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 3:
@@ -84,14 +93,17 @@ class NameSearchProtocol(WebSocketServerProtocol):
                   "data":["Customer already in DB. if this is definitely a different person then add a middle initial or something to the first name field to differentiate"]}
             else:
                 conn.commit()
-                name_info = getCustName(cust_id, c)[0]
-                data = {"custId":cust_id,\
-                        "cust_first_name":name_info['cust_first_name'],\
-                        "cust_last_name":name_info['cust_last_name'],\
-                        "custData": getCustData(cust_id, c), "coffeeData":getCoffeeData(c),\
-                        "grindData":getGrindData(c)}
+                data = self.buildCustPageDataJSON(cust_id, c)
                 print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
                 json_data = {"type":1, "data":data}
+        elif decoded['type'] == 4:
+            claim_data = decoded['data']
+            cust_id = claim_data['cust_id']
+            registerClaim(cust_id, claim_data['coffee_id'], claim_data['grind_id'], claim_data['weight'], c)
+            conn.commit()
+            data = self.buildCustPageDataJSON(cust_id, c)
+            print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+            json_data = {"type":1, "data":data}
         elif decoded['type'] == -1:
             json_data = {"type":-1, "data":data}
 
