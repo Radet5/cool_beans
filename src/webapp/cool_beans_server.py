@@ -2,6 +2,7 @@ import sys
 import sqlite3
 import json
 import socket
+import datetime
 from twisted.web.static import File
 from twisted.python import log
 from twisted.web.server import Site
@@ -38,6 +39,9 @@ class NameSearchProtocol(WebSocketServerProtocol):
         claim_count = len(claims)
         earned_rewards = len(cust_data)/10
         remaining_rewards = earned_rewards - claim_count
+        for row in cust_data:
+            dattee = datetime.datetime.strptime(row['purchase_date'], "%Y-%m-%d %H:%M:%S") - datetime.timedelta(hours=5)
+            row['purchase_date'] = dattee.strftime("%m/%d/%Y %I:%M %p")
 
         cust_data.extend(claims)
         

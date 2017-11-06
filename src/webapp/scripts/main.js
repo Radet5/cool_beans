@@ -155,31 +155,32 @@ window.addEventListener("load", function() {
                 myHeading.textContent = heading;
 
                 var custDiv = document.createElement("div");
+                var tableElement = document.createElement("table");
                 custDiv.id = "custData";
                 purchases = data['custData'];
                 if (purchases.length == 0) {
                     custDiv.appendChild(document.createTextNode("No Purchases"));
                 }
                 else {
-                    html =  "<table><thead><tr><th>Coffee Name</th><th>Grind</th>";
+                    html =  "<thead><tr><th>Coffee Name</th><th>Grind</th>";
                     html += "<th>Weight</th><th>Transaction Date</th></tr></thead>";
                     html += "<tbody>";
                     for (i = 0; i < purchases.length; i++) {
-                        dt_str = purchases[i]['purchase_date']+" UTC";
-                        var date = new Date(dt_str);
-                        var options = {hour:'2-digit', minute:'2-digit'};
-                        purch_date = date.toLocaleDateString('en-US', options);
+//                      dt_str = purchases[i]['purchase_date']+" UTC";
+//                      var date = new Date(dt_str);
+//                      var options = {hour:'2-digit', minute:'2-digit'};
+//                      purch_date = date.toLocaleDateString('en-US', options);
                         html += "<tr>";
                         html += "<td>" + purchases[i]['coffee_name'] + "</td>";
                         html += "<td>" + purchases[i]['grind_desc'] + "</td>";
                         html += "<td>" + purchases[i]['purchase_weight'] + "oz</td>";
-                        html += "<td>" + purch_date + "</td>";
+                        html += "<td>" + purchases[i]['purchase_date'] + "</td>";
                         html += "</tr>";
                     }
-                    html += "</tbody></table>";
-                    custDiv.innerHTML = html;
+                    html += "</tbody>";
+                    tableElement.innerHTML = html;
                     var announce = document.createElement("p");
-                    announce.innerHTML = data['remainingRewards'] +" free bags earned";
+                    announce.innerHTML = data['remainingRewards'].toString() +" free bags earned";
                     var claimButton = document.createElement("div");
                     claimButton.id="claimButton" ;
                     claimButton.className="button";
@@ -249,9 +250,10 @@ window.addEventListener("load", function() {
                         output.appendChild(backButtonDiv);
                     });
                     if (data['remainingRewards'] > 0) {
-                        custDiv.prepend(claimButton);
-                        custDiv.prepend(announce);
+                        custDiv.appendChild(announce);
+                        custDiv.appendChild(claimButton);
                     }
+                    custDiv.appendChild(tableElement);
                 }
 
                 var addButtonDiv = document.createElement("div");
