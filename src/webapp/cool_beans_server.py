@@ -39,9 +39,16 @@ class NameSearchProtocol(WebSocketServerProtocol):
         claim_count = len(claims)
         earned_rewards = len(cust_data)/10
         remaining_rewards = earned_rewards - claim_count
+        remaining_purch = 10 - len(cust_data)%10
         for row in cust_data:
             dattee = datetime.datetime.strptime(row['purchase_date'], "%Y-%m-%d %H:%M:%S") - datetime.timedelta(hours=5)
             row['purchase_date'] = dattee.strftime("%m/%d/%Y %I:%M %p")
+            row['type'] = "Paid"
+
+        for row in claims:
+            dattee = datetime.datetime.strptime(row['purchase_date'], "%Y-%m-%d %H:%M:%S") - datetime.timedelta(hours=5)
+            row['purchase_date'] = dattee.strftime("%m/%d/%Y %I:%M %p")
+            row['type'] = "Free!"
 
         cust_data.extend(claims)
         
@@ -50,6 +57,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
                 "lastName":name_info['cust_last_name'],\
                 "custData": sorted(cust_data, key=lambda k: k['purchase_date'], reverse=True),\
                 "remainingRewards": remaining_rewards,\
+                "remainingPurch": remaining_purch,\
                 "coffeeData":getCoffeeData(c),\
                 "grindData":getGrindData(c)}
 

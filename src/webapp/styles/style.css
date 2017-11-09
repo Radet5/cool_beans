@@ -10,9 +10,12 @@ html {
     border: 3px solid white;
     background-color: #552200;
     color: white;
+    font-size: 16px;
+    line-height: 2;
+    letter-spacing: 1px;
 }
 
-.test {
+#output {
     position:relative;
     top: 0rem;
     width: 100%;
@@ -21,6 +24,7 @@ html {
 
 .nameField {
     margin: 0 2px;
+    font-size: 16px;
 }
 
 #search_div {

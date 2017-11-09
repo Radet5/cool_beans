@@ -1,6 +1,6 @@
 var nameList = document.querySelector('.nameList');
-var nameField = document.querySelector('.nameField');
-var output = document.querySelector('.test');
+var nameField = document.getElementById('nameField');
+var output = document.getElementById('output');
 var searchDiv = document.getElementById('search_div');
 nameField.focus();
 
@@ -83,33 +83,54 @@ window.addEventListener("load", function() {
             if (firstNameField.value != "" && lastNameField.value != "") {
                 submitCust.textContent = "GOOD";
                 json_text = "{\"type\":3, \"data\":{\"last_name\":\""+lastNameField.value+"\",\"first_name\":\""+firstNameField.value+"\"}}";
-                sendToServer(searchSocket, json_text, output);
         //After all said and done, put stuff back
                 searchDiv.appendChild(nameField);
                 searchDiv.appendChild(nameList);
                 searchDiv.removeChild(firstNameField);
                 searchDiv.removeChild(lastNameField);
                 searchDiv.removeChild(submitCust);
+                searchDiv.removeChild(backButtonDiv);
                 searchDiv.appendChild(registerButtonDiv);
                 nameField.focus();
+                sendToServer(searchSocket, json_text, output);
             }
             else {
                 alert("Please enter a first and a last name");
             }
         });
 
+        var backButtonDiv = document.createElement("div");
+        backButtonDiv.id = "back";
+        backButtonDiv.className = "button";
+        backButtonDiv.innerHTML = "&nbspBack&nbsp";
+        backButtonDiv.addEventListener('click', function (e) {
+            input_text = lastNameField.value;
+            json_text = "{\"type\":0, \"data\":\"" + input_text + "\"}";
+            searchDiv.appendChild(nameField);
+            searchDiv.appendChild(nameList);
+            searchDiv.removeChild(firstNameField);
+            searchDiv.removeChild(lastNameField);
+            searchDiv.removeChild(submitCust);
+            searchDiv.removeChild(backButtonDiv);
+            searchDiv.appendChild(registerButtonDiv);
+            nameField.focus();
+            sendToServer(searchSocket, json_text, output);
+            e.preventDefault();
+        });
        
         searchDiv.removeChild(nameField);
         searchDiv.removeChild(nameList);
         searchDiv.appendChild(firstNameField);
         searchDiv.appendChild(lastNameField);
         searchDiv.appendChild(submitCust);
+        searchDiv.appendChild(backButtonDiv);
         lastNameField.focus();
         
     });
 
     searchDiv.appendChild(registerButtonDiv);
     
+
     searchSocket.onmessage = function (event) {
         var json_data = JSON.parse(event.data);
         var myHeading = document.getElementById('heading');
@@ -122,6 +143,10 @@ window.addEventListener("load", function() {
                 data = json_data['data'];
                 clearList(nameList);
                 clearList(output);
+                var hasChild = searchDiv.querySelector("#registerCustomer") != null;
+                if (!hasChild) {
+                    searchDiv.appendChild(registerButtonDiv);
+                }
 
                 for (i = 0; i < data.length; i++) {
                     var li = document.createElement("li");
@@ -144,6 +169,10 @@ window.addEventListener("load", function() {
             case 1:
                 clearList(nameList);
                 clearList(output);
+                var hasChild = searchDiv.querySelector("#registerCustomer") != null;
+                if (hasChild) {
+                    searchDiv.removeChild(registerButtonDiv);
+                }
 //              nameField.focus();
 
                 var data = json_data['data']
@@ -163,7 +192,7 @@ window.addEventListener("load", function() {
                 }
                 else {
                     html =  "<thead><tr><th>Coffee Name</th><th>Grind</th>";
-                    html += "<th>Weight</th><th>Transaction Date</th></tr></thead>";
+                    html += "<th>Weight</th><th>Transaction Date</th><th>Type</th></tr></thead>";
                     html += "<tbody>";
                     for (i = 0; i < purchases.length; i++) {
 //                      dt_str = purchases[i]['purchase_date']+" UTC";
@@ -175,12 +204,11 @@ window.addEventListener("load", function() {
                         html += "<td>" + purchases[i]['grind_desc'] + "</td>";
                         html += "<td>" + purchases[i]['purchase_weight'] + "oz</td>";
                         html += "<td>" + purchases[i]['purchase_date'] + "</td>";
+                        html += "<td>" + purchases[i]['type'] + "</td>";
                         html += "</tr>";
                     }
                     html += "</tbody>";
                     tableElement.innerHTML = html;
-                    var announce = document.createElement("p");
-                    announce.innerHTML = data['remainingRewards'].toString() +" free bags earned";
                     var claimButton = document.createElement("div");
                     claimButton.id="claimButton" ;
                     claimButton.className="button";
@@ -249,9 +277,15 @@ window.addEventListener("load", function() {
                         output.appendChild(submit);
                         output.appendChild(backButtonDiv);
                     });
+                    var announce = document.createElement("p");
+                    announce.innerHTML = data['remainingPurch'].toString() +" purchases until next free bag";
                     if (data['remainingRewards'] > 0) {
+                        announce.innerHTML += "<br>"+data['remainingRewards'].toString() +" free bags earned";
                         custDiv.appendChild(announce);
                         custDiv.appendChild(claimButton);
+                    }
+                    else {
+                        custDiv.appendChild(announce);
                     }
                     custDiv.appendChild(tableElement);
                 }
