@@ -2,6 +2,8 @@ import csv
 from tabulate import tabulate
 import sqlite3
 
+debug = False
+
 def initializeTree(name, cust_id):
     return [{'state':0, 'input':name[0], 'next':1, 'prev':'', 'results':[]},
             {'state':1, 'input':'', 'next':'', 'prev':0, 'results':[(name, cust_id)]}]
@@ -20,14 +22,14 @@ def selectInput(tree, state, input_char):
 def addNewRow(tree, input_char, state, prev, results, nxt):
     new_row = {'input':input_char, 'state':state, 'prev':prev,\
                'results':results, 'next':nxt}
-    print "\nCreating Row::\n"+tabulate([new_row], headers="keys",\
+    if debug: print "\nCreating Row::\n"+tabulate([new_row], headers="keys",\
                                         tablefmt="grid")+"\n"
     tree.append(new_row)
     return new_row
 
 def alterRow(row, input_c='', state='', prev='', results='', nxt=''):
-    print "\nAltering Row from:\n"
-    print tabulate([row], headers="keys",\
+    if debug: print "\nAltering Row from:\n"
+    if debug: print tabulate([row], headers="keys",\
                     tablefmt="grid")
     if input_c:
         row['input'] = input_c
@@ -39,8 +41,8 @@ def alterRow(row, input_c='', state='', prev='', results='', nxt=''):
         row['results'] = results
     if nxt:
         row['next'] = nxt
-    print "to:"
-    print tabulate([row], headers="keys",\
+    if debug: print "to:"
+    if debug: print tabulate([row], headers="keys",\
                     tablefmt="grid")+"\n"
     return row
 
@@ -50,10 +52,10 @@ def alterRow(row, input_c='', state='', prev='', results='', nxt=''):
 def addName(tree, name, cust_id):
     """Returns NULL
         Adds name to tree"""
-    print "\nEnroling: "+name+"\n"
+    if debug: print "\nEnroling: "+name+"\n"
     state = 0
     for depth, input_char in enumerate(name):
-        print "\nDepth: "+str(depth)+", State: "+str(state)+\
+        if debug: print "\nDepth: "+str(depth)+", State: "+str(state)+\
               ", Input: "+input_char
 
         nxt = selectInput(tree, state, input_char)
@@ -61,11 +63,11 @@ def addName(tree, name, cust_id):
         # input. If so: follow the transition to next state
         if nxt:
             state = nxt[0]['next']
-            print "Transition exists for: "+input_char+"\n"
+            if debug: print "Transition exists for: "+input_char+"\n"
             #In case you add a short name which is a subset of an already
             # enrolled name
             if len(name) == depth+1:
-                print "WELL WELL WELL"
+                if debug: print "WELL WELL WELL"
                 depth += 1
                 cur_state = selectState(tree, state)
                 new_state_id = sorted(tree, key=lambda s: s['state'],\
@@ -91,17 +93,17 @@ def addName(tree, name, cust_id):
                                   reverse=True)[0]['state']+1
             #If only one entry for current state:
             if len(cur_state) == 1:
-                print "LEAF NODE: POSSIBLE COLLISION"
+                if debug: print "LEAF NODE: POSSIBLE COLLISION"
                 #Weird work around for dealing with state 0
                 if not cur_state[0]['results']:
-                    print "WEIRD\nCreating Rows:"
+                    if debug: print "WEIRD\nCreating Rows:"
                     addNewRow(tree, input_char, state,'',[],new_state_id)
                     addNewRow(tree, '', new_state_id, state, [(name, cust_id)], '')
                     return
                 #Same last name, so multiple results in one leaf.
                 # TODO: SHOULD eventually RECORD THE CUSTOMER ID's HERE
                 elif cur_state[0]['results'][0][0] == name:
-                    print "COllISION!"
+                    if debug: print "COllISION!"
                     cur_state[0]['results'].append((name, cust_id))
                     return
 
@@ -110,7 +112,7 @@ def addName(tree, name, cust_id):
                 # depth level and a transition entered. Also need to insert
                 # current entry and record the transition entry for it
                 else:
-                    print "Need to branch!\nCreating Rows:\n"
+                    if debug: print "Need to branch!\nCreating Rows:\n"
                     #Make sure name at current level has more letters in it
                     # if it does, move it down
                     if len(cur_state[0]['results'][0][0]) > depth :
@@ -124,11 +126,11 @@ def addName(tree, name, cust_id):
                         #Case for when prev name is subset of current name
                         # Just move on to next state/letter/depth
                         if new_row['results'][0][0][depth] == input_char:
-                                print "SAME LETTER!"
+                                if debug: print "SAME LETTER!"
                                 state = cur_state[0]['next']
                                 #unless the current name is out of letters
                                 if len(name) == depth+1:
-                                    print "WELL WELL WELL"
+                                    if debug: print "WELL WELL WELL"
                                     depth += 1
                                     cur_state = selectState(tree, state)
                                     new_state_id = sorted(tree, key=lambda s: s['state'],\
@@ -165,7 +167,7 @@ def addName(tree, name, cust_id):
                         addNewRow(tree, '', new_state_id, state, [(name, cust_id)], '')
                         #Check if there is already a transtion be sure to preserve it
                         if cur_state[0]['input']:
-                            print "Well shit, Sir Ashon"
+                            if debug: print "Well shit, Sir Ashon"
                             addNewRow(tree, input_char, cur_state[0]['state'],\
                                       cur_state[0]['prev'], [], new_state_id)
                         else:
@@ -176,7 +178,7 @@ def addName(tree, name, cust_id):
             # for the current input then we need to add a transition for
             # current input and then insert name
             elif len(cur_state) > 1:
-                print "NOT IN TREE\n"
+                if debug: print "NOT IN TREE\n"
                 addNewRow(tree, input_char, state, cur_state[0]['prev'], [],\
                              new_state_id)
                 addNewRow(tree, '', new_state_id, state, [(name, cust_id)], '')

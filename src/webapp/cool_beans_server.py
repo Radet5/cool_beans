@@ -27,6 +27,7 @@ sqlite_file = 'data/cust_db.sqlite'
 conn = sqlite3.connect(sqlite_file)
 conn.row_factory = dict_factory
 c = conn.cursor()
+debug = False
 
 class NameSearchProtocol(WebSocketServerProtocol):
     def onConnect(self, request):
@@ -62,7 +63,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
                 "grindData":getGrindData(c)}
 
     def onMessage(self, payload, isBinary):
-        print(payload)
+        if debug: print(payload)
         data = []
         try:
             decoded = json.loads(payload)
@@ -86,7 +87,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             cust_id = decoded['data']
             #TODO:TRYCATCH NON INT
             data = self.buildCustPageDataJSON(cust_id, c)
-            print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+            if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 2:
             purch_data = decoded['data']
@@ -94,7 +95,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             registerPurchase(cust_id, purch_data['coffee_id'], purch_data['grind_id'], purch_data['weight'], c)
             conn.commit()
             data = self.buildCustPageDataJSON(cust_id, c)
-            print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+            if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 3:
             data = decoded['data']
@@ -106,7 +107,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             else:
                 conn.commit()
                 data = self.buildCustPageDataJSON(cust_id, c)
-                print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+                if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
                 json_data = {"type":1, "data":data}
         elif decoded['type'] == 4:
             claim_data = decoded['data']
@@ -114,7 +115,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             registerClaim(cust_id, claim_data['coffee_id'], claim_data['grind_id'], claim_data['weight'], c)
             conn.commit()
             data = self.buildCustPageDataJSON(cust_id, c)
-            print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+            if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == -1:
             json_data = {"type":-1, "data":data}
