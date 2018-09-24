@@ -202,7 +202,12 @@ window.addEventListener("load", function() {
                         html += "<tr>";
                         html += "<td>" + purchases[i]['coffee_name'] + "</td>";
                         html += "<td>" + purchases[i]['grind_desc'] + "</td>";
-                        html += "<td>" + purchases[i]['purchase_weight'] + "oz</td>";
+                        if  (purchases[i]['purchase_weight'] == 0) {
+                            html += "<td>See Notes</td>";
+                        }
+                        else {
+                            html += "<td>" + purchases[i]['purchase_weight'] + "oz</td>";
+                        }
                         html += "<td>" + purchases[i]['purchase_date'] + "</td>";
                         html += "<td>" + purchases[i]['type'] + "</td>";
                         html += "</tr>";
