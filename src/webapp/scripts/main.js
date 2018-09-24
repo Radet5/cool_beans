@@ -242,7 +242,7 @@ window.addEventListener("load", function() {
                         createRadioList(grinds, data['grindData'], 'grind', 'grind_id', 'grind_desc');
                         output.appendChild(grinds);
 
-                        var weightData = JSON.parse("[{\"weight_val\":16, \"weight_desc\":\"16oz\"},{\"weight_val\":12, \"weight_desc\":\"12oz\"},{\"weight_val\":8, \"weight_desc\":\"8oz\"}]");
+                        var weightData = JSON.parse("[{\"weight_val\":16, \"weight_desc\":\"16oz\"},{\"weight_val\":12, \"weight_desc\":\"12oz\"},{\"weight_val\":8, \"weight_desc\":\"8oz\"},{\"weight_val\":0, \"weight_desc\":\"See Notes\"}]");
                         var weights = document.createElement("div");
                         weights.id = "weights";
                         h2 = document.createElement("h2");
