@@ -23,8 +23,8 @@ def getCustData(cust_id, db_curs):
     result_a.append(result_b)
     return result_a
 
-def getCustName(cust_id, db_curs):
-    db_curs.execute('SELECT cust_first_name, cust_last_name FROM cust WHERE cust_id = ?',(cust_id,))
+def getCustInfo(cust_id, db_curs):
+    db_curs.execute('SELECT cust_first_name, cust_last_name, cust_notes FROM cust WHERE cust_id = ?',(cust_id,))
     return db_curs.fetchall()
 
 def getCoffeeData(db_curs):
@@ -65,6 +65,11 @@ def registerPurchase(cust_id, coffee_id, grind_id, weight, db_curs):
 def registerClaim(cust_id, coffee_id, grind_id, weight, db_curs):
     db_curs.execute('INSERT INTO claim (claim_cust_id, claim_coffee_id,\
                      claim_grind_id, purchase_weight) VALUES (?,?,?,?)',(str(cust_id), str(coffee_id), str(grind_id), str(weight)))
+
+def registerCustNotes(cust_id, cust_notes, db_curs):
+    db_curs.execute('UPDATE cust\
+                     SET cust_notes = ?\
+                     WHERE cust_id = ?',(cust_notes, str(cust_id)))
 
 def registerCustomer(last_name, first_name, db_curs):
     backup_destination = '../../data/cust_db.sqlite.bak_' + datetime.datetime.now().strftime("%Y_%m_%d_%H-%M")

@@ -277,6 +277,24 @@ window.addEventListener("load", function() {
                         output.appendChild(submit);
                         output.appendChild(backButtonDiv);
                     });
+                    var notes = document.createElement("input");
+                    notes.id = "notesField";
+                    notes.className = "notesField";
+                    notes.type = "text";
+                    notes.value = data['notes'];
+                    if (notes.value.length > 0) {
+                        notes.size = notes.value.length;
+                    }
+                    else {
+                        notes.size = 20;
+                    }
+                    notes.addEventListener('input', function (e) {
+                        notes_text = notes.value;
+                        json_text = "{\"type\":5, \"data\":{\"cust_id\":"+data['custId']+", \"cust_notes\":\""+notes_text+"\"}}";
+                        sendToServer(searchSocket, json_text, output);
+                        e.preventDefault();
+                    })
+                    custDiv.appendChild(notes);
                     var announce = document.createElement("p");
                     announce.innerHTML = data['remainingPurch'].toString() +" purchases until next free bag";
                     if (data['remainingRewards'] > 0) {
@@ -289,6 +307,7 @@ window.addEventListener("load", function() {
                     }
                     custDiv.appendChild(tableElement);
                 }
+
 
                 var addButtonDiv = document.createElement("div");
                 addButtonDiv.id = "addPurchase";
@@ -373,6 +392,7 @@ window.addEventListener("load", function() {
                 output.appendChild(addButtonDiv);
                 output.appendChild(backButtonDiv);
                 output.appendChild(custDiv);
+                notes.focus();
                 break;
             case -1:
                 if (json_data['data'].length > 0) {

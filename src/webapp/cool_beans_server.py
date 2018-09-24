@@ -16,12 +16,13 @@ from autobahn.twisted.resource import WebSocketResource
 from search_trans_table import search
 from search_trans_table import dict_factory
 from search_trans_table import getCustData
-from search_trans_table import getCustName
+from search_trans_table import getCustInfo
 from search_trans_table import getCoffeeData
 from search_trans_table import getGrindData
 from search_trans_table import registerPurchase
 from search_trans_table import registerClaim
 from search_trans_table import registerCustomer
+from search_trans_table import registerCustNotes
 
 sqlite_file = 'data/cust_db.sqlite'
 conn = sqlite3.connect(sqlite_file)
@@ -34,7 +35,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
         print("SocketConn: {}".format(request))
 
     def buildCustPageDataJSON(self, cust_id, c):
-        name_info = getCustName(cust_id, c)[0]
+        cust_info = getCustInfo(cust_id, c)[0]
         cust_data = getCustData(cust_id, c)
         claims = cust_data.pop()
         claim_count = len(claims)
@@ -54,8 +55,9 @@ class NameSearchProtocol(WebSocketServerProtocol):
         cust_data.extend(claims)
         
         return {"custId":cust_id,\
-                "firstName":name_info['cust_first_name'],\
-                "lastName":name_info['cust_last_name'],\
+                "firstName":cust_info['cust_first_name'],\
+                "lastName":cust_info['cust_last_name'],\
+                "notes":cust_info['cust_notes'],\
                 "custData": sorted(cust_data, key=lambda k: k['purchase_date'], reverse=True),\
                 "remainingRewards": remaining_rewards,\
                 "remainingPurch": remaining_purch,\
@@ -117,6 +119,14 @@ class NameSearchProtocol(WebSocketServerProtocol):
             data = self.buildCustPageDataJSON(cust_id, c)
             if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
             json_data = {"type":1, "data":data}
+        elif decoded['type'] == 5:
+            data = decoded['data']
+            cust_id = data['cust_id']
+            cust_notes = data['cust_notes']
+            registerCustNotes(cust_id, cust_notes, c)
+            conn.commit()
+            custdata = self.buildCustPageDataJSON(cust_id, c)
+            json_data = {"type":1, "data":custdata}
         elif decoded['type'] == -1:
             json_data = {"type":-1, "data":data}
 

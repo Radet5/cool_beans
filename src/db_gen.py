@@ -12,6 +12,7 @@ c = conn.cursor()
 c.execute('CREATE TABLE cust (cust_id INTEGER PRIMARY KEY ASC,\
                               cust_last_name TEXT NOT NULL,\
                               cust_first_name TEXT NOT NULL,\
+                              cust_notes TEXT,\
                               cust_email TEXT)')
 
 c.execute('CREATE TABLE coffee (coffee_id INTEGER PRIMARY KEY ASC,\
