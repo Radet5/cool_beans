@@ -181,22 +181,111 @@ def search(name, db_curs):
 #       print tabulate(cust_list, headers="keys", tablefmt="grid")
         return cust_list
 
+def interactiveSearch(c):
+    last_name = str(raw_input("Customer Last Name: "))
+    cust_list = search(last_name, c)
+    print tabulate(cust_list, headers="keys", tablefmt="grid")
+    first_name = str(raw_input("\nCustomer First Name: "))
+    for cust in cust_list:
+        if cust[0] == last_name:
+            if cust[1] == first_name:
+                print "\n"
+                return [cust[0], cust[1], cust[2]]
+    print "\n"
+    return [last_name, first_name, 0]
+
+def registerMassPurchase(cust_id, c):
+    print "Customer ID: "+ str(cust_id)
+    coffees = getCoffeeData(c)
+    print tabulate(coffees, headers="keys", tablefmt="grid")
+    coffee = raw_input("Select Coffee: ")
+    if int(coffee) > len(coffees) or int(coffee) < 1:
+        print "Invalid ID"
+        return
+    print "\n" + coffees[int(coffee)-1][1] + "\n"
+    grinds = getGrindData(c)
+    print tabulate(grinds, headers="keys", tablefmt="grid")
+    grind = raw_input("Select Grind: ")
+    if int(grind) > len(grinds) or int(grind) < 1:
+        print "Invalid ID"
+        print len(grinds)
+        return
+    print "\n" + grinds[int(grind)-1][1] + "\n"
+
+    weight = raw_input("Coffee Weight(0 for \"See notes\"): ")
+
+    cust_info = getCustInfo(cust_id, c)
+    print "\nRegistering purchases for " + cust_info[0][0] + " " + cust_info[0][1]
+    purchase_count = raw_input("\nHow many " + coffees[int(coffee)-1][1] + " " + grinds[int(grind)-1][1] + " " + weight + "oz to register: ")
+    for i in range(0, int(purchase_count)): 
+        registerPurchase(cust_id, coffee, grind, weight, c)
 
 if __name__ == "__main__":
+    
 
-    sqlite_file = '../data/cust_db.sqlite'
+    sqlite_file = 'data/cust_db.sqlite'
 
     #Connect
     conn = sqlite3.connect(sqlite_file)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
-    print "blank search"
-    search("", c)
+    menu = {}
+    menu['1']="Search"
+    menu['2']="Enroll"
+    menu['3']="Add Purchases"
+    menu['4']="Exit"
+    while True:
+        cust_id = -1
+        options=menu.keys()
+        options.sort()
+        for entry in options:
+            print entry, menu[entry]
 
-    print "search bur"
-    cust_list = search("bur", c)
-    print tabulate(cust_list, headers="keys", tablefmt="grid")
+        selection=raw_input("Please Select:")
+        print "\n"
+        if selection =='1':
+            cust = interactiveSearch(c)
+            if cust[2]:
+                print cust[1] + " " + cust[0] + ", ID: " + str(cust[2])
+                cust_id = cust[2]
+                if raw_input("If you would like to add purchases please enter 3: ") == '3':
+                    registerMassPurchase(cust_id, c)
+                    conn.commit()
+            else: print "No such customer"
+            print "\n\n"
+        elif selection == '2':
+            cust = interactiveSearch(c)
+            if cust[2]:
+                print cust[1] + " " + cust[0] + " is already enrolled!"
+                if raw_input("If you would like to add purchases please enter 3: ") == '3':
+                    registerMassPurchase(cust[2], c)
+                    conn.commit()
+            else:
+                cust_id = registerCustomer(cust[0], cust[1], c)
+                conn.commit()
+                if raw_input("If you would like to add purchases please enter 3: ") == '3':
+                    registerMassPurchase(cust_id, c)
+                    conn.commit()
+            print "\n\n"
+        elif selection == '3':
+            cid = raw_input("Please enter customer ID (or 0 to search): ")
+            if cid == '0':
+                cust_id = interactiveSearch(c)[2]
+                if cust_id > 0:
+                    registerMassPurchase(cust_id, c)
+                    conn.commit()
+                else:
+                    print "No such customer!"
+            else: 
+                registerMassPurchase(cid, c)
+                conn.commit()
+            print "\n"
+        elif selection == '4':
+            break
+        else:
+            print "Unknown Option Selected!"
+
 
 #   print "\n\nsearch b"
 #   search("b", c)
