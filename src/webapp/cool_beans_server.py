@@ -3,6 +3,7 @@ import sqlite3
 import json
 import socket
 import datetime
+import logging
 from twisted.web.static import File
 from twisted.python import log
 from twisted.web.server import Site
@@ -28,11 +29,12 @@ sqlite_file = 'data/cust_db.sqlite'
 conn = sqlite3.connect(sqlite_file)
 conn.row_factory = dict_factory
 c = conn.cursor()
+logging.basicConfig(filename='log_cool_beans_server.log',level=logging.INFO,format='%(asctime)s (%(levelname)s): %(message)s')
 debug = False
 
 class NameSearchProtocol(WebSocketServerProtocol):
     def onConnect(self, request):
-        print("SocketConn: {}".format(request))
+        logging.debug("SocketConn: {}".format(request))
 
     def buildCustPageDataJSON(self, cust_id, c):
         cust_info = getCustInfo(cust_id, c)[0]
@@ -65,12 +67,12 @@ class NameSearchProtocol(WebSocketServerProtocol):
                 "grindData":getGrindData(c)}
 
     def onMessage(self, payload, isBinary):
-        if debug: print(payload)
+        logging.info("received: "+payload)
         data = []
         try:
             decoded = json.loads(payload)
         except ValueError:
-            print("ERROR: Invalid JSON object recieved")
+            logging.error("ERROR: Invalid JSON object recieved")
             decoded = {"type": -1}
             data = ["Data sent to server was not valid"]
 
@@ -89,7 +91,8 @@ class NameSearchProtocol(WebSocketServerProtocol):
             cust_id = decoded['data']
             #TODO:TRYCATCH NON INT
             data = self.buildCustPageDataJSON(cust_id, c)
-            if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+            logging.info("type 1 - "+data['firstName']+" "+data['lastName']+" ID ("+str(data['custId'])+") L "+str(data['remainingPurch'])+" | R "+str(data['remainingRewards']))
+            logging.debug(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 2:
             purch_data = decoded['data']
@@ -97,19 +100,19 @@ class NameSearchProtocol(WebSocketServerProtocol):
             registerPurchase(cust_id, purch_data['coffee_id'], purch_data['grind_id'], purch_data['weight'], c)
             conn.commit()
             data = self.buildCustPageDataJSON(cust_id, c)
-            if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+            logging.info("type 2 - "+json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 3:
             data = decoded['data']
             cust_id = registerCustomer(data['last_name'], data['first_name'], c)
             if cust_id < 0:
-                print "Customer already in DB"
+                logging.info("Customer already in DB")
                 json_data = {"type":-2, "cust_id":cust_id*-1,\
                   "data":["Customer already in DB. if this is definitely a different person then add a middle initial or something to the first name field to differentiate"]}
             else:
                 conn.commit()
                 data = self.buildCustPageDataJSON(cust_id, c)
-                if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+                logging.info(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
                 json_data = {"type":1, "data":data}
         elif decoded['type'] == 4:
             claim_data = decoded['data']
@@ -117,7 +120,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             registerClaim(cust_id, claim_data['coffee_id'], claim_data['grind_id'], claim_data['weight'], c)
             conn.commit()
             data = self.buildCustPageDataJSON(cust_id, c)
-            if debug: print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+            logging.info(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 5:
             data = decoded['data']
