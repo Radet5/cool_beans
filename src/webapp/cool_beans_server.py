@@ -91,7 +91,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             cust_id = decoded['data']
             #TODO:TRYCATCH NON INT
             data = self.buildCustPageDataJSON(cust_id, c)
-            logging.info("type 1 - "+data['firstName']+" "+data['lastName']+" ID ("+str(data['custId'])+") L "+str(data['remainingPurch'])+" | R "+str(data['remainingRewards']))
+            logging.info("type 1.1 - "+data['firstName']+" "+data['lastName']+" ID ("+str(data['custId'])+") L "+str(data['remainingPurch'])+" | R "+str(data['remainingRewards']))
             logging.debug(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 2:
@@ -100,19 +100,21 @@ class NameSearchProtocol(WebSocketServerProtocol):
             registerPurchase(cust_id, purch_data['coffee_id'], purch_data['grind_id'], purch_data['weight'], c)
             conn.commit()
             data = self.buildCustPageDataJSON(cust_id, c)
-            logging.info("type 2 - "+json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
+            logging.info("type 1.2 - "+data['firstName']+" "+data['lastName']+" ID ("+str(data['custId'])+") L "+str(data['remainingPurch'])+" | R "+str(data['remainingRewards']))
+            logging.debug(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 3:
             data = decoded['data']
             cust_id = registerCustomer(data['last_name'], data['first_name'], c)
             if cust_id < 0:
-                logging.info("Customer already in DB")
+                logging.info("Customer already in DB: "+data['last_name']+" "+data['first_name'])
                 json_data = {"type":-2, "cust_id":cust_id*-1,\
                   "data":["Customer already in DB. if this is definitely a different person then add a middle initial or something to the first name field to differentiate"]}
             else:
                 conn.commit()
                 data = self.buildCustPageDataJSON(cust_id, c)
-                logging.info(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
+                logging.info("Registered: "+data['lastName']+", "+data['firstName'])
+                logging.debug(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
                 json_data = {"type":1, "data":data}
         elif decoded['type'] == 4:
             claim_data = decoded['data']
@@ -120,7 +122,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             registerClaim(cust_id, claim_data['coffee_id'], claim_data['grind_id'], claim_data['weight'], c)
             conn.commit()
             data = self.buildCustPageDataJSON(cust_id, c)
-            logging.info(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
+            logging.debug(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 5:
             data = decoded['data']

@@ -2,6 +2,7 @@ import csv
 from tabulate import tabulate
 import sqlite3
 import datetime
+import logging
 from shutil import copyfile
 
 from build_transition_table import addName
@@ -72,11 +73,11 @@ def registerCustNotes(cust_id, cust_notes, db_curs):
                      WHERE cust_id = ?',(cust_notes, str(cust_id)))
 
 def registerCustomer(last_name, first_name, db_curs):
-    backup_destination = '../../data/cust_db.sqlite.bak_' + datetime.datetime.now().strftime("%Y_%m_%d_%H-%M")
-    copyfile('../../data/cust_db.sqlite', backup_destination)
+    backup_destination = 'data/cust_db.sqlite.bak_' + datetime.datetime.now().strftime("%Y_%m_%d_%H-%M")
+    copyfile('data/cust_db.sqlite', backup_destination)
     low_last_name = last_name.lower()
     low_first_name = first_name.lower()
-    print low_last_name
+    logging.info(low_last_name)
     db_curs.execute('SELECT * FROM cust WHERE cust_last_name = ?',(low_last_name,))
     rows = db_curs.fetchall()
     is_name_unique = True
@@ -89,7 +90,7 @@ def registerCustomer(last_name, first_name, db_curs):
                 return row['cust_id'] * -1
                 break
             else :
-                print "Different first name"
+                logging.debug("Different first name")
                 is_name_unique = True
     if is_name_unique:
         cust_id = insertCustRowIntoDb({'last_name':low_last_name,\
