@@ -108,12 +108,14 @@ class NameSearchProtocol(WebSocketServerProtocol):
             cust_id = registerCustomer(data['last_name'], data['first_name'], c)
             if cust_id < 0:
                 logging.info("Customer already in DB: "+data['last_name']+" "+data['first_name'])
+                logging.info("type -2")
                 json_data = {"type":-2, "cust_id":cust_id*-1,\
                   "data":["Customer already in DB. if this is definitely a different person then add a middle initial or something to the first name field to differentiate"]}
             else:
                 conn.commit()
                 data = self.buildCustPageDataJSON(cust_id, c)
                 logging.info("Registered: "+data['lastName']+", "+data['firstName'])
+                logging.info("type 1.3 - "+data['firstName']+" "+data['lastName']+" ID ("+str(data['custId'])+") L "+str(data['remainingPurch'])+" | R "+str(data['remainingRewards']))
                 logging.debug(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
                 json_data = {"type":1, "data":data}
         elif decoded['type'] == 4:
@@ -122,6 +124,7 @@ class NameSearchProtocol(WebSocketServerProtocol):
             registerClaim(cust_id, claim_data['coffee_id'], claim_data['grind_id'], claim_data['weight'], c)
             conn.commit()
             data = self.buildCustPageDataJSON(cust_id, c)
+            logging.info("type 1.4 - "+data['firstName']+" "+data['lastName']+" ID ("+str(data['custId'])+") L "+str(data['remainingPurch'])+" | R "+str(data['remainingRewards']))
             logging.debug(json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
             json_data = {"type":1, "data":data}
         elif decoded['type'] == 5:
@@ -131,8 +134,10 @@ class NameSearchProtocol(WebSocketServerProtocol):
             registerCustNotes(cust_id, cust_notes, c)
             conn.commit()
             custdata = self.buildCustPageDataJSON(cust_id, c)
+            logging.info("type 1.5 - "+custdata['firstName']+" "+custdata['lastName']+" ID ("+str(custdata['custId'])+") L "+str(custdata['remainingPurch'])+" | R "+str(custdata['remainingRewards']))
             json_data = {"type":1, "data":custdata}
         elif decoded['type'] == -1:
+            logging.info("type -1")
             json_data = {"type":-1, "data":data}
 
         self.sendMessage(json.dumps(json_data).encode('utf8'))
