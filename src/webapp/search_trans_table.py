@@ -221,6 +221,14 @@ def registerMassPurchase(cust_id, c):
     for i in range(0, int(purchase_count)): 
         registerPurchase(cust_id, coffee, grind, weight, c)
 
+def getCustCount(db_curs):
+    db_curs.execute('SELECT count(*) FROM cust')
+    return db_curs.fetchall()[0][0]
+
+def getPurchCount(db_curs):
+    db_curs.execute('SELECT count(*) FROM purchase')
+    return db_curs.fetchall()[0][0]
+
 if __name__ == "__main__":
     
 
@@ -235,7 +243,8 @@ if __name__ == "__main__":
     menu['1']="Search"
     menu['2']="Enroll"
     menu['3']="Add Purchases"
-    menu['4']="Exit"
+    menu['4']="Stats"
+    menu['0']="Exit"
     while True:
         cust_id = -1
         options=menu.keys()
@@ -283,6 +292,10 @@ if __name__ == "__main__":
                 conn.commit()
             print "\n"
         elif selection == '4':
+            print "total purchases: " + str(getPurchCount(c))
+            print "total customers: " + str(getCustCount(c))
+            print ""
+        elif selection == '0':
             break
         else:
             print "Unknown Option Selected!"
