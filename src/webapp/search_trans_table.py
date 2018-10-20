@@ -225,9 +225,28 @@ def getCustCount(db_curs):
     db_curs.execute('SELECT count(*) FROM cust')
     return db_curs.fetchall()[0][0]
 
-def getPurchCount(db_curs):
-    db_curs.execute('SELECT count(*) FROM purchase')
+def getPurchCount(db_curs, start_date='1970-06-06', end_date = ''):
+    if not end_date:
+        db_curs.execute('SELECT count(*) FROM purchase WHERE purchase_date > date(?)', (start_date,))
+    else:
+        db_curs.execute('SELECT count(*) FROM purchase WHERE purchase_date BETWEEN date(?) AND date(?)', (start_date,end_date,))
     return db_curs.fetchall()[0][0]
+
+def getClaimCount(db_curs, start_date='1970-06-06', end_date = ''):
+    db_curs.execute('SELECT count(*) FROM claim WHERE purchase_date > date(?)', (start_date,))
+    return db_curs.fetchall()[0][0]
+
+def getPurchCountByCoffee(db_curs, start_date='1970-06-06', end_date = ''):
+    db_curs.execute('SELECT coffee_name, count(purchase_coffee_id) FROM purchase JOIN coffee ON coffee_id = purchase_coffee_id  WHERE purchase_date > date(?) GROUP BY purchase_coffee_id', (start_date,))
+    return db_curs.fetchall()
+
+def getPurchCountByGrind(db_curs, start_date='1970-06-06', end_date = ''):
+    db_curs.execute('SELECT grind_desc, count(purchase_grind_id) FROM purchase JOIN grind ON grind_id = purchase_grind_id  WHERE purchase_date > date(?) GROUP BY purchase_grind_id', (start_date,))
+    return db_curs.fetchall()
+
+def getTopCountCust(db_curs, count=5, start_date='1970-06-06', end_date = ''):
+    db_curs.execute('SELECT cust_id, cust_last_name, cust_first_name, count(purchase_cust_id) FROM purchase JOIN cust ON cust_id = purchase_cust_id  WHERE purchase_date > date(?) GROUP BY purchase_cust_id ORDER BY count(purchase_cust_id) DESC LIMIT (?)', (start_date,count,))
+    return db_curs.fetchall()
 
 if __name__ == "__main__":
     
@@ -292,9 +311,13 @@ if __name__ == "__main__":
                 conn.commit()
             print "\n"
         elif selection == '4':
-            print "total purchases: " + str(getPurchCount(c))
+            date = '2018-10-04'
+            print tabulate(getPurchCountByCoffee(c, date), headers=["coffee", "purchases"], tablefmt="grid")
+            print tabulate(getPurchCountByGrind(c, date), headers=["grind", "purchases"], tablefmt="grid")
+            print tabulate(getTopCountCust(c, 5, date), headers=["cust_id", "last_name", "first_name", "purchases"], tablefmt="grid")
+            print "total purchases: " + str(getPurchCount(c, date))
+            print "total claims: " + str(getClaimCount(c, date))
             print "total customers: " + str(getCustCount(c))
-            print ""
         elif selection == '0':
             break
         else:
